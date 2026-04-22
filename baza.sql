@@ -21,15 +21,33 @@ CREATE TABLE SPRING_SESSION_ATTRIBUTES (
     CONSTRAINT SPRING_SESSION_ATTRIBUTES_FK FOREIGN KEY (SESSION_PRIMARY_ID) REFERENCES SPRING_SESSION(PRIMARY_ID) ON DELETE CASCADE
 );
 
+CREATE TABLE user_roles(
+    id SERIAL primary key,
+    name varchar(25)
+);
+
 CREATE TABLE app_user(
       id SERIAL primary key,
+      role_id int references user_roles(id),
       email varchar(30) unique,
       password varchar(128),
       name varchar(30),
       surname varchar(30)
 );
 
-INSERT INTO app_user VALUES (0, 'admin@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'admin', 'kowalski');
+CREATE TABLE form_templates(
+    id SERIAL primary key,
+    name varchar(60),
+    json text
+);
+
+INSERT INTO user_roles VALUES
+(0, 'admin'),
+(1, 'supervisor'),
+(2, 'worker'),
+(3, 'student');
+
+INSERT INTO app_user VALUES (0, 0, 'admin@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'admin', 'kowalski');
 
 
 

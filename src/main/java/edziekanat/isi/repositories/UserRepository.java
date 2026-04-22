@@ -5,6 +5,7 @@ import edziekanat.isi.models.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class UserRepository {
-    private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate; //move this to a signle file
 
     public UserRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -23,8 +24,12 @@ public class UserRepository {
             new User(
                     rs.getInt("id"),
                     rs.getString("name"),
-                    rs.getString("surname")
+                    rs.getString("surname"),
+                    User.idToRole(rs.getInt("role_id"))
             );
+
+    private final RowMapper<Integer> userRoleMapper = (rs, rowNum) ->
+            rs.getInt("role_id");
 
     private final RowMapper<String> passwordMapper = (rs, rowNum) -> rs.getString("password");
 
@@ -59,4 +64,26 @@ public class UserRepository {
 
         return user;
     }
+
+    /*
+    public User.UserPermissions getUserPermisions(int id) {
+        try {
+            User.UserPermissions userPermissions;
+
+            String sql = "SELECT role_id FROM app_user WHERE id = ?";
+            int roleId = jdbcTemplate.queryForObject(sql, userRoleMapper, id);
+
+            switch (roleId) {
+                case 0 -> userPermissions = User.UserPermissions.Admin;
+                case 1 -> userPermissions = User.UserPermissions.Supervisor;
+                case 2 -> userPermissions = User.UserPermissions.Worker;
+                default -> userPermissions = User.UserPermissions.Student; //3
+            }
+
+            return userPermissions;
+        } catch (DataAccessException e) {
+            return null;
+        }
+    }
+    */
 }

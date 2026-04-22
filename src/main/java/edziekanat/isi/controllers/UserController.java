@@ -35,12 +35,14 @@ public class UserController {
         }
         else if (userSession != null && user == null)  return userSession;
         else if (userSession == null && user != null){
+            session.setAttribute("permissions", user.getUserPermissions());
             session.setAttribute("id", user.getId());
             return user;
         }
         else {
             session.invalidate();
             session = request.getSession(true);
+            session.setAttribute("permissions", user.getUserPermissions());
             session.setAttribute("id", user.getId());
             return user;
         }
