@@ -1,32 +1,56 @@
 package edziekanat.isi.models;
 
+/*
+public enum UserPermissions {
+    Admin,
+    Supervisor,
+    Worker,
+    Student
+}
+*/
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name="app_user")
 public class User
 {
-    public enum UserPermissions {
-        Admin,
-        Supervisor,
-        Worker,
-        Student
-    }
-
-    private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
+    @ManyToOne
+    @JoinColumn(name="role_id", nullable = false)
+    private UserRole role;
     private String name;
     private String surname;
-    private UserPermissions userPermissions;
+    private String email;
+    private String password;
 
-    public User(int id, String name, String surname, UserPermissions userPermissions) {
+    public User(){}
+
+    public User(long id, UserRole role, String name, String surname, String email, String password) {
         this.id = id;
+        this.role = role;
         this.name = name;
         this.surname = surname;
-        this.userPermissions = userPermissions;
+        this.email = email;
+        this.password = password;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
     }
 
     public String getName() {
@@ -45,6 +69,24 @@ public class User
         this.surname = surname;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+
+    /*
     public UserPermissions getUserPermissions() {
         return userPermissions;
     }
@@ -64,4 +106,5 @@ public class User
 
         return userPermissions;
     }
+    */
 }

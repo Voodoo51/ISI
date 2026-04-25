@@ -1,32 +1,18 @@
 package edziekanat.isi.repositories;
 
-import edziekanat.isi.models.LoginData;
 import edziekanat.isi.models.User;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-import org.mindrot.jbcrypt.BCrypt;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 @Repository
-public class UserRepository {
+public interface UserRepository extends JpaRepository<User, Long> {
+    User findByEmail(String email);
+    /*
     private final JdbcTemplate jdbcTemplate; //move this to a signle file
 
     public UserRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
-
-    private final RowMapper<User> userRowMapper = (rs, rowNum) ->
-            new User(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getString("surname"),
-                    User.idToRole(rs.getInt("role_id"))
-            );
 
     private final RowMapper<Integer> userRoleMapper = (rs, rowNum) ->
             rs.getInt("role_id");
@@ -65,7 +51,7 @@ public class UserRepository {
         return user;
     }
 
-    /*
+
     public User.UserPermissions getUserPermisions(int id) {
         try {
             User.UserPermissions userPermissions;

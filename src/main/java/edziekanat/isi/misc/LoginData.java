@@ -1,4 +1,4 @@
-package edziekanat.isi.models;
+package edziekanat.isi.misc;
 
 public class LoginData {
     private String email;

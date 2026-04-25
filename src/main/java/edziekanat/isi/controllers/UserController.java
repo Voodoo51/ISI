@@ -1,31 +1,30 @@
 package edziekanat.isi.controllers;
 
-import edziekanat.isi.models.LoginData;
-import edziekanat.isi.models.User;
-import edziekanat.isi.repositories.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import edziekanat.isi.misc.LoginData;
+import edziekanat.isi.dto.UserPublicData;
+import edziekanat.isi.services.AuthorizationService;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.mindrot.jbcrypt.BCrypt;
 
 @RestController
 @RequestMapping("/user")
 public class UserController {
-    private final UserRepository userRepository;
-
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    @Autowired
+    private AuthorizationService authorizationService;
 
     @PostMapping("/login")
-    public User login(HttpSession session, HttpServletResponse response, HttpServletRequest request, @Validated @RequestBody LoginData loginData) {
+    public ResponseEntity<UserPublicData> login(@Validated @RequestBody LoginData loginData) {
+        UserPublicData userPublicData = authorizationService.login(loginData);
+
+        return ResponseEntity.ok(userPublicData);
+        /*
+        //HttpSession session, HttpServletResponse response, HttpServletRequest request
         User userSession = userRepository.getFromSession(session);
         User user = userRepository.credentialsCorrect(loginData);
 
@@ -46,6 +45,7 @@ public class UserController {
             session.setAttribute("id", user.getId());
             return user;
         }
+         */
     }
 
     @PostMapping("/logout")
