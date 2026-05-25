@@ -35,6 +35,13 @@ CREATE TABLE app_user(
       surname varchar(30)
 );
 
+CREATE TABLE oauth_user(
+      id BIGSERIAL primary key,
+      user_id BIGSERIAL references app_user(id),
+      token varchar(512)
+);
+-- potencjalnie dodac slownik do rodzaju konta (google, github) ale raczej tylko github
+
 CREATE TABLE form_template(
     id SERIAL primary key,
     title varchar(60),
