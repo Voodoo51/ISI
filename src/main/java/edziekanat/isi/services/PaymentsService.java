@@ -15,9 +15,9 @@ import java.util.Optional;
 
 @Service
 public class PaymentsService {
-    private PaymentsRepository paymentsRepository;
-    private UserRepository userRepository;
-    private OutboxRepository outboxRepository;
+    private final PaymentsRepository paymentsRepository;
+    private final UserRepository userRepository;
+    private final OutboxRepository outboxRepository;
     private final KafkaProducerService kafkaService;
     private final int retryCount = 0;
 
