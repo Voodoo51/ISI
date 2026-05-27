@@ -35,6 +35,14 @@ CREATE TABLE app_user(
       surname varchar(30)
 );
 
+//dopisane //idk może trzeba dopisać fkey do form
+CREATE TABLE payments(
+      id BIGSERIAL primary key,
+      user_id int references app_user(id),
+      amount float,
+      status varchar(20)
+);
+
 CREATE TABLE form_template(
     id SERIAL primary key,
     title varchar(60),

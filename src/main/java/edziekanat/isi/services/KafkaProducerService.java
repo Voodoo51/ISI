@@ -18,4 +18,10 @@ public class KafkaProducerService {
         kafkaTemplate.send(TOPIC, message);
         System.out.println("Message sent: " + message);
     }
+
+    //nowe
+    public void sendPayment(String paymentJson) {
+        kafkaTemplate.send("payments", paymentJson);
+        System.out.println("Payment sent: " + paymentJson);
+    }
 }
