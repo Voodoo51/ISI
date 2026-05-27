@@ -51,7 +51,7 @@ public class SecurityConfig {
             )
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/user/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/auth/**", "/user/register", "/swagger-ui/**", "/v3/api-docs/**", "/send").permitAll()
                 .anyRequest()
                 .authenticated())
             .addFilterAt(filter, UsernamePasswordAuthenticationFilter.class)

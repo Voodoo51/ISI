@@ -15,10 +15,12 @@ public class PaymentsService {
     private PaymentsRepository paymentsRepository;
     @Autowired
     private UserRepository userRepository;
+    private final KafkaProducerService kafkaService;
 
-    public PaymentsService(PaymentsRepository paymentsRepository, UserRepository usersRepository){
+    public PaymentsService(PaymentsRepository paymentsRepository, UserRepository usersRepository, KafkaProducerService kafkaService){
         this.paymentsRepository = paymentsRepository;
         this.userRepository = usersRepository;
+        this.kafkaService = kafkaService;
     }
 
     public Payments crateNewPayment(Long userId, Long amount){
@@ -30,6 +32,7 @@ public class PaymentsService {
         payment.setAmount(amount);
         payment.setStatus("Pending");
 
+        kafkaService.sendPayment(payment ); //id czy to tutaj czy w kontrolerze
         return paymentsRepository.save(payment);
     }
 

@@ -1,5 +1,6 @@
 package edziekanat.isi.services;
 
+import edziekanat.isi.models.Payments;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +21,9 @@ public class KafkaProducerService {
     }
 
     //nowe
-    public void sendPayment(String paymentJson) {
-        kafkaTemplate.send("payments", paymentJson);
+    public void sendPayment(Payments paymentJson) {
+        //kafkaTemplate.send("payments-topic", paymentId);
+        kafkaTemplate.send("payments", paymentJson.getId().toString());//na razie jest tylko id przesyłane
         System.out.println("Payment sent: " + paymentJson);
     }
 }
