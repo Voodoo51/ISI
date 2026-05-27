@@ -78,12 +78,14 @@ CREATE TABLE payments(
       amount BIGINT,
       status varchar(20)
 );
--- dopisane
+-- dopisane idk czy nie powinno robic references payments(id)
 CREATE TABLE outbox_events (
     id BIGSERIAL PRIMARY KEY,
     topic VARCHAR(255),
     payload TEXT,
     sent BOOLEAN DEFAULT FALSE,
+    retry_count int DEFAULT 0,
+    payment_id BIGINT,
     created_at TIMESTAMP DEFAULT NOW()
 );
 

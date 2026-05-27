@@ -16,7 +16,12 @@ import jakarta.persistence.*;
         private String payload;
 
         private boolean sent = false;
+
+         @Column(columnDefinition = "retry_count")
         private int retryCount = 0;
+
+         @Column(columnDefinition = "payment_id")
+        private long paymentId = 0;
 
         public Long getId() {
             return id;
@@ -24,6 +29,13 @@ import jakarta.persistence.*;
         public void setId(Long id) {
             this.id = id;
         }
+
+        public Long getPaymentId() {
+            return id;
+        }
+        public void setPaymentId(Long id) {
+        this.id = id;
+    }
 
         public String getTopic() {
             return topic;

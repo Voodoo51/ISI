@@ -23,7 +23,7 @@ public class KafkaController {
         return "Message sent successfully!";
     }
 
-    @PostMapping("/payment")
+    @PostMapping("/payment")//zapomnialam o dto, trzeba zmienic
     public String sendPayment(@RequestBody PaymentsDto request) {
         paymentsService.crateNewPayment(request.getId(), request.getAmount());
         return "Payment sent yey!";

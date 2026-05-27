@@ -9,22 +9,22 @@ import edziekanat.isi.repositories.PaymentsRepository;
 import edziekanat.isi.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.Optional;
 
 @Service
 public class PaymentsService {
-    @Autowired
     private PaymentsRepository paymentsRepository;
-    @Autowired
     private UserRepository userRepository;
     private OutboxRepository outboxRepository;
     private final KafkaProducerService kafkaService;
     private final int retryCount = 0;
 
-    public PaymentsService(PaymentsRepository paymentsRepository, OutboxRepository outboxRepository, UserRepository usersRepository, OutboxRepository outboxRepository1, KafkaProducerService kafkaService){
+    public PaymentsService(PaymentsRepository paymentsRepository, OutboxRepository outboxRepository, UserRepository usersRepository, KafkaProducerService kafkaService){
         this.paymentsRepository = paymentsRepository;
         this.userRepository = usersRepository;
-        this.outboxRepository = outboxRepository1;
+        this.outboxRepository = outboxRepository;
         this.kafkaService = kafkaService;
     }
 
@@ -37,21 +37,20 @@ public class PaymentsService {
         payment.setUser(user.get());
         payment.setAmount(amount);
         payment.setStatus("Pending");
+        Payments savedPayment= paymentsRepository.save(payment);
 
         OutboxEvent event = new OutboxEvent();
         event.setTopic("topic1");
-        event.setPayload(payment.getId() + "," +
-                payment.getAmount() + "," +
-                payment.getStatus()
+        event.setPaymentId(savedPayment.getId());
+        event.setPayload(savedPayment.getId() + "," +
+                savedPayment.getAmount() + "," +
+                savedPayment.getStatus()
         );
 
         outboxRepository.save(event);
 
-        return paymentsRepository.save(payment);
+        return savedPayment;
     }
 
-    public boolean updatePayment(){
-        return false;
-    }
 
 }

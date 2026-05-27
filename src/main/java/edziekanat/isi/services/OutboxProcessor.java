@@ -21,7 +21,7 @@ public class OutboxProcessor {
     }
 
 
-
+//czy to też nie musi byc transactional
     @Scheduled(fixedRate = 5000)
     public void processPaymentOutbox() {
 
@@ -38,5 +38,7 @@ public class OutboxProcessor {
             }
         }
     }
+
+
 
 }
