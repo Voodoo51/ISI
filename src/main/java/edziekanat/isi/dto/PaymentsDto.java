@@ -17,7 +17,7 @@ public class PaymentsDto {
         return user;
     }
 
-    public void setId(long id) {
+    public void setId(User id) {
         this.user = user;
     }
 

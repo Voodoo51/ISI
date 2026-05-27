@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.*;
 public class KafkaController {
 
     private final KafkaProducerService producerService;
+    private final PaymentsService paymentsService;
 
-    public KafkaController(KafkaProducerService producerService) {
+    public KafkaController(KafkaProducerService producerService, PaymentsService paymentsService) {
         this.producerService = producerService;
+        this.paymentsService = paymentsService;
     }
 
     @GetMapping("/send")
@@ -23,7 +25,7 @@ public class KafkaController {
 
     @PostMapping("/payment")
     public String sendPayment(@RequestBody PaymentsDto request) {
-        PaymentsService.crateNewPayment(request.getId(), request.getAmount());
+        paymentsService.crateNewPayment(request.getId(), request.getAmount());
         return "Payment sent yey!";
     }
 }
