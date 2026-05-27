@@ -21,6 +21,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(e.getMessage());
     }
 
+    @ExceptionHandler(FormTemplateNotFoundException.class)
+    public ResponseEntity<String> handleFormTemplateNotFound(FormTemplateNotFoundException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<String> handleUnauthorized(UnauthorizedException e) {
         return ResponseEntity.badRequest().body(e.getMessage());

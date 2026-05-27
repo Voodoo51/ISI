@@ -39,7 +39,7 @@ public class SecurityConfig {
 
 //     .authorizeHttpRequests(auth ->
 //                auth.requestMatchers("/adming").hasRole("adming").anyRequest().authenticated())
-
+//make roles have sense
         AuthenticationFilter filter =
                 new AuthenticationFilter(authManager);
         CorsConfig corsConfig = new CorsConfig();
@@ -51,7 +51,7 @@ public class SecurityConfig {
             )
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/user/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/auth/**", "/user/register", "/swagger-ui/**", "/v3/api-docs/**", "/send", "/form/**").permitAll()
                 .anyRequest()
                 .authenticated())
             .addFilterAt(filter, UsernamePasswordAuthenticationFilter.class)

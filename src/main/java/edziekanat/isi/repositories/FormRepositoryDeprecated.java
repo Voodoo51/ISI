@@ -16,7 +16,7 @@ public class FormRepositoryDeprecated {
     public boolean insertFormTemplate(FormTemplate formTemplate) {
         try {
             String sql = "INSERT INTO form_templates VALUES(? ?)";
-            jdbcTemplate.update(sql, formTemplate.getTitle(), formTemplate.getJson());
+            jdbcTemplate.update(sql, formTemplate.getTitle(), formTemplate.getFormFields());
             return true;
         } catch (DataAccessException e) {
             return false;

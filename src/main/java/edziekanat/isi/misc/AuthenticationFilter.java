@@ -18,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 
 import java.io.IOException;
 
@@ -33,8 +34,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         try {
-            LoginRequest login =
-                    objectMapper.readValue(request.getInputStream(), LoginRequest.class);
+            LoginRequest login = objectMapper.readValue(request.getInputStream(), LoginRequest.class);
 
             UsernamePasswordAuthenticationToken authRequest =
                     new UsernamePasswordAuthenticationToken(
@@ -56,6 +56,21 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                                             Authentication authResult)
             throws IOException, ServletException {
 
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authResult);
+        SecurityContextHolder.setContext(context);
+
+        SecurityContextRepository repo =
+                new HttpSessionSecurityContextRepository();
+
+        repo.saveContext(context, request, response);
+
+        //response.setStatus(HttpServletResponse.SC_OK);
+        //SecurityContextHolder.getContext().setAuthentication(authResult);
+
+        response.setStatus(HttpServletResponse.SC_OK);
+
+        /*
         //SecurityContextHolder.getContext().setAuthentication(authResult);
         //request.getSession(true); // ważne
         SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -70,5 +85,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json");
         // this makes session persist automatically
+         */
     }
 }

@@ -52,8 +52,9 @@ CREATE TABLE oauth_user(
 
 CREATE TABLE form_template(
     id SERIAL primary key,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     title varchar(60),
-    json text
+    form_fields JSONB
 );
 
 CREATE TABLE sent_form_status(
@@ -66,7 +67,7 @@ CREATE TABLE sent_form(
     user_id int references app_user(id),
     form_template_id int references form_template(id),
     status_id int references sent_form_status(id),
-    json text
+    form_data JSONB
 );
 
 --dopisane //idk może trzeba dopisać fkey do form
@@ -89,18 +90,14 @@ INSERT INTO app_user VALUES (0, 0, 'admin@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.
 INSERT INTO sent_form_status VALUES
 (0, 'accepted'),
 (1, 'pending'),
-(2, 'declined');
+(2, 'declined'),
+(3, 'not_sent'),
+(4, 'in_need_of_update');
 
-INSERT INTO form_template VALUES
-(0, 'Form 1', 'Form json description.'),
-(1, 'Form 2', 'Form json description.'),
-(2, 'Form 3', 'Form json description.');
-
-INSERT INTO sent_form VALUES
-(0, 0, 0, 0, 'Form json data.'),
-(1, 0, 1, 0, 'Form json data.'),
-(2, 0, 2, 1, 'Form json data.'),
-(3, 0, 2, 2, 'Form json data.');
+    INSERT INTO form_template VALUES
+(0, '2026-05-27 19:03:39.91878', 'Form 1', '[{"id": 1, "label": "Numer telefonu", "type": "phoneNumber", "placeholder": "570678420"}, {"id": 2, "label": "Email", "type": "email", "placeholder": "nazwa@gmail.com"}]'),
+(1, '2026-05-27 19:04:38.857737', 'Form 2', '[{"id": 1, "label": "Wydział", "type": "none", "placeholder": "WEAIL"}, {"id": 2, "label": "Dowolny wpis", "type": "none", "placeholder": "Wpis"}]'),
+(2, '2026-05-27 19:05:31.703989', 'Form 3', '[{"id": 1, "label": "PESEL", "type": "none", "placeholder": "0325102358"}, {"id": 2, "label": "Kierunek", "type": "none", "placeholder": "Informatyka"}]');
 
 INSERT INTO oauth_provider VALUES
 (0, 'github');

@@ -3,6 +3,7 @@ package edziekanat.isi.services;
 import edziekanat.isi.dto.LoginRequest;
 import edziekanat.isi.exceptions.BadRequestException;
 import edziekanat.isi.exceptions.InternalServerErrorException;
+import edziekanat.isi.exceptions.UnauthorizedException;
 import edziekanat.isi.exceptions.UserNotFoundException;
 import edziekanat.isi.dto.GithubToken;
 import edziekanat.isi.dto.GithubTokenRequest;
@@ -18,6 +19,7 @@ import edziekanat.isi.repositories.OAuthUserRepository;
 import edziekanat.isi.repositories.UserRepository;
 import edziekanat.isi.repositories.UserRoleRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -68,7 +70,7 @@ public class AuthorizationService {
     }
 
     @Transactional
-    public void githubCallback(String code, HttpServletRequest request)
+    public void githubCallback(String code, HttpServletRequest request, HttpServletResponse response)
     {
         Optional<OAuthProvider> provider = oAuthProviderRepository.findByName("github"); // should already exist but just in case
         if (provider.isEmpty()) throw new InternalServerErrorException("Provider not found: github");
@@ -99,9 +101,9 @@ public class AuthorizationService {
         User authenticatedUser;
 
         Optional<OAuthUser> oAuthUser = oAuthUserRepository.findByProviderUserId(githubUserData.getId().toString());
-        if(oAuthUser.isPresent()) {
-            authenticatedUser = oAuthUser.get().getUser();
+        if(oAuthUser.isPresent()) { //System.out.println(newUser.getId());
             oAuthUser.get().setToken(token.getAccess_token());
+            authenticatedUser = oAuthUser.get().getUser();
         }
         else {
             Optional<UserRole> userRole = userRoleRepository.findByName("student");
@@ -109,7 +111,7 @@ public class AuthorizationService {
             if(userRole.isEmpty()) throw new InternalServerErrorException("User role not found.");
 
             User newUser = new User(userRole.get(), githubUserData.getLogin(), "", githubUserData.getEmail(), "");
-            userRepository.save(newUser);
+            newUser = userRepository.save(newUser); // If not done this way then id is always 0
 
             OAuthUser newOAuthUser = new OAuthUser(newUser, provider.get(), githubUserData.getId().toString(), token.getAccess_token());
             oAuthUserRepository.save(newOAuthUser);
@@ -118,6 +120,7 @@ public class AuthorizationService {
         }
 
         CustomUserDetails userDetails = new CustomUserDetails(authenticatedUser);
+        System.out.println(userDetails.getUserId());
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(
                         userDetails,
@@ -126,12 +129,24 @@ public class AuthorizationService {
                 );
 
         SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+
+        HttpSessionSecurityContextRepository repo =
+                new HttpSessionSecurityContextRepository();
+
+        repo.saveContext(context, request, response);
+        //SecurityContextHolder.getContext().setAuthentication(authentication);
+        /*
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
 
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
 
         HttpSession session = request.getSession(true);
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+
+         */
     }
 
     public UserPublicData login(LoginRequest loginRequest) {
@@ -164,5 +179,17 @@ public class AuthorizationService {
         return new UserPublicData(user);
 
          */
+    }
+
+    public UserPublicData getUserPublicData(Authentication authentication) {
+        if(authentication == null) throw new BadRequestException("Old session");
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        if(userDetails == null) throw new BadRequestException("Old session.");
+
+        Optional<User> user = userRepository.findById(userDetails.getUserId());
+        if(user.isEmpty()) throw new UserNotFoundException();
+
+        return new UserPublicData(user.get());
     }
 }

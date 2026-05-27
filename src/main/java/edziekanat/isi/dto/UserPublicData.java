@@ -5,13 +5,14 @@ import edziekanat.isi.models.User;
 import edziekanat.isi.models.UserRole;
 
 public class UserPublicData {
-    private long id;
+    private Long id;
     private String email;
     private String name;
     private String surname;
     private UserRole role;
 
     public UserPublicData(User user) {
+        this.id = user.getId();
         this.email = user.getEmail();
         this.name = user.getName();
         this.surname = user.getSurname();
@@ -19,7 +20,7 @@ public class UserPublicData {
         this.role = user.getRole();
     }
 
-    public UserPublicData(long id, String email, String name, String surname, UserRole role) {
+    public UserPublicData(Long id, String email, String name, String surname, UserRole role) {
         this.id = id;
         this.email = email;
         this.name = name;
@@ -27,11 +28,11 @@ public class UserPublicData {
         this.role = role;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
