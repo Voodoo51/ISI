@@ -19,8 +19,9 @@ public class Payments {
 
     public Payments(){}
 
-    public Payments(long id,  float amount, String status) {
+    public Payments(long id, User user,  float amount, String status) {
         this.id = id;
+        this.user= user;
         this.amount = amount;
         this.status = status;
     }

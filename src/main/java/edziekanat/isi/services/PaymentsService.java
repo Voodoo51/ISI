@@ -9,13 +9,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class PaymentsService {
     private final PaymentsRepository paymentsRepository;
+    private final UserRepository userRepository;
 
-    public PaymentsService(PaymentsRepository paymentsRepository){
+    public PaymentsService(PaymentsRepository paymentsRepository, UserRepository usersRepository){
         this.paymentsRepository = paymentsRepository;
+        this.userRepository = usersRepository;
     }
 
     public Payments crateNewPayment(long userId, float amount){
-        User user = UserRepository.findById(userId).orElseThrow();
+        User user = userRepository.findById(userId).orElseThrow();
         Payments payment = new Payments();
 
         payment.setUserId(user);
