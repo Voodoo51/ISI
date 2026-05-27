@@ -1,29 +1,28 @@
 package edziekanat.isi.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
-@Table(name="user_role")
-public class UserRole {
+@Table(name="oauth_provider")
+public class OAuthProvider {
     @Id
-    private int id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Integer id;
     private String name;
 
-    public UserRole(){
+    public OAuthProvider() {
     }
 
-    public UserRole(int id, String name) {
+    public OAuthProvider(Integer id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

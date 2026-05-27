@@ -2,12 +2,15 @@ package edziekanat.isi.controllers;
 
 import edziekanat.isi.dto.LoginRequest;
 import edziekanat.isi.dto.UserPublicData;
+import edziekanat.isi.exceptions.BadRequestException;
+import edziekanat.isi.exceptions.InternalServerErrorException;
 import edziekanat.isi.exceptions.UnauthorizedException;
 import edziekanat.isi.misc.CustomUserDetails;
 import edziekanat.isi.misc.LoginData;
 import edziekanat.isi.models.User;
 import edziekanat.isi.models.UserRole;
 import edziekanat.isi.services.AuthorizationService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -32,8 +35,9 @@ public class AuthorizationController {
     }
 
     @GetMapping("github/callback")
-    public ResponseEntity<UserPublicData> githubCallback(@RequestParam(required = true) String code ) {
-        return null;
+    public RedirectView githubCallback(@RequestParam(required = true) String code, HttpServletRequest request) {
+        authorizationService.githubCallback(code, request);
+        return new RedirectView("http://localhost:3000");
     }
 
     @GetMapping("/me")

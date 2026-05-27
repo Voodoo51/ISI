@@ -26,7 +26,8 @@ public class User
     private String email;
     private String password;
 
-    public User(){}
+    public User(){
+    }
 
     public User(UserRole role, String name, String surname, String email, String password) {
         this.role = role;

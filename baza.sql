@@ -31,14 +31,22 @@ CREATE TABLE app_user(
       role_id int references user_role(id),
       email varchar(30) unique,
       password varchar(128),
-      name varchar(30),
+      name varchar(40),
       surname varchar(30)
+);
+
+CREATE TABLE oauth_provider(
+    id SERIAL primary key,
+    name varchar(30)
 );
 
 CREATE TABLE oauth_user(
       id BIGSERIAL primary key,
-      user_id BIGSERIAL references app_user(id),
-      token varchar(512)
+      user_id BIGINT references app_user(id),
+      provider_id int references oauth_provider(id),
+      provider_user_id VARCHAR(128), -- varchar bo rozne serwisy uzywaja roznych idkow
+      token varchar(512),
+      CONSTRAINT uq_oauth_provider_user UNIQUE(provider_id, provider_user_id)
 );
 -- potencjalnie dodac slownik do rodzaju konta (google, github) ale raczej tylko github
 
@@ -86,4 +94,6 @@ INSERT INTO sent_form VALUES
 (2, 0, 2, 1, 'Form json data.'),
 (3, 0, 2, 2, 'Form json data.');
 
+INSERT INTO oauth_provider VALUES
+(0, 'github');
 

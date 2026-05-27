@@ -26,4 +26,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(e.getMessage());
     }
 
+    @ExceptionHandler(InternalServerErrorException.class)
+    public ResponseEntity<String> handleInternalServer(InternalServerErrorException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
 }
