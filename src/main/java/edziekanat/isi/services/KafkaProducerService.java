@@ -21,9 +21,9 @@ public class KafkaProducerService {
     }
 
     //nowe
-    public void sendPayment(Payments paymentJson) {
-        //kafkaTemplate.send("payments-topic", paymentId);
-        kafkaTemplate.send("payments", paymentJson.getId().toString());//na razie jest tylko id przesyłane
-        System.out.println("Payment sent: " + paymentJson);
-    }
+//    public void sendPayment(Payments paymentJson) {
+//        //kafkaTemplate.send("payments-topic", paymentId);
+//        kafkaTemplate.send("payments", paymentJson.getId().toString());//na razie jest tylko id przesyłane
+//        System.out.println("Payment sent: " + paymentJson);
+//    }
 }

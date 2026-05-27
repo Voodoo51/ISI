@@ -70,12 +70,21 @@ CREATE TABLE sent_form(
 );
 
 --dopisane //idk może trzeba dopisać fkey do form
+
 CREATE TABLE payments(
       id BIGSERIAL primary key,
       user_id BIGINT references app_user(id),
       sent_form_id BIGINT references sent_form(id),
       amount BIGINT,
       status varchar(20)
+);
+-- dopisane
+CREATE TABLE outbox_events (
+    id BIGSERIAL PRIMARY KEY,
+    topic VARCHAR(255),
+    payload TEXT,
+    sent BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 INSERT INTO user_role VALUES
