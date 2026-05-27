@@ -5,13 +5,16 @@ import edziekanat.isi.models.Payments;
 import edziekanat.isi.models.User;
 import edziekanat.isi.repositories.PaymentsRepository;
 import edziekanat.isi.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
 public class PaymentsService {
-    private final PaymentsRepository paymentsRepository;
-    private final UserRepository userRepository;
+    @Autowired
+    private PaymentsRepository paymentsRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     public PaymentsService(PaymentsRepository paymentsRepository, UserRepository usersRepository){
         this.paymentsRepository = paymentsRepository;
@@ -31,7 +34,6 @@ public class PaymentsService {
     }
 
     public boolean updatePayment(){
-
         return false;
     }
 

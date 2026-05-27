@@ -12,7 +12,6 @@ public class PaymentsDto {
         this.amount = payments.getAmount();
     }
 
-
     public Long getId() {
         return userId;
     }
