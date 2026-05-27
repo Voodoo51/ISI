@@ -8,35 +8,32 @@ public class Payments {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-
-
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-
-    private float amount;
+    private Long amount;
     private String status;
 
     public Payments(){}
 
-    public Payments(long id, User user,  float amount, String status) {
+    public Payments(long id, User user,  Long amount, String status) {
         this.id = id;
         this.user= user;
         this.amount = amount;
         this.status = status;
     }
 
-    public long getId() { return id; }
+    public Long getId() { return id; }
 
     public void setId(long id) { this.id = id; }
 
-    public User getUserId() {  return user; }
+    public User getUser() {  return user; }
 
-    public void setUserId(User userId) { this.user = user; }
+    public void setUser(User userId) { this.user = user; }
 
-    public float getAmount() { return amount;  }
+    public Long getAmount() { return amount;  }
 
-    public void setAmount(float amount) { this.amount = amount; }
+    public void setAmount(Long amount) { this.amount = amount; }
 
     public String getStatus() {  return status; }
 

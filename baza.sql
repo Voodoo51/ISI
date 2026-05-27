@@ -69,6 +69,14 @@ CREATE TABLE sent_form(
     json text
 );
 
+--dopisane //idk może trzeba dopisać fkey do form
+CREATE TABLE payments(
+      id BIGSERIAL primary key,
+      user_id BIGINT references app_user(id),
+      sent_form_id BIGINT references sent_form(id),
+      amount BIGINT,
+      status varchar(20)
+);
 
 INSERT INTO user_role VALUES
 (0, 'admin'),

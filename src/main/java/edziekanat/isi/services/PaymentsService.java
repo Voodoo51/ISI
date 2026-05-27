@@ -1,10 +1,12 @@
 package edziekanat.isi.services;
 
+import edziekanat.isi.exceptions.UserNotFoundException;
 import edziekanat.isi.models.Payments;
 import edziekanat.isi.models.User;
 import edziekanat.isi.repositories.PaymentsRepository;
 import edziekanat.isi.repositories.UserRepository;
 import org.springframework.stereotype.Service;
+import java.util.Optional;
 
 @Service
 public class PaymentsService {
@@ -16,11 +18,12 @@ public class PaymentsService {
         this.userRepository = usersRepository;
     }
 
-    public Payments crateNewPayment(long userId, float amount){
-        User user = userRepository.findById(userId).orElseThrow();
-        Payments payment = new Payments();
+    public Payments crateNewPayment(Long userId, Long amount){
+        Optional<User> user = userRepository.findById(userId);
+        if(user.isEmpty()) throw new UserNotFoundException();
 
-        payment.setUserId(user);
+        Payments payment = new Payments();
+        payment.setUser(user.get());
         payment.setAmount(amount);
         payment.setStatus("Pending");
 

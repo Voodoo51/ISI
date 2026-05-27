@@ -4,28 +4,28 @@ import edziekanat.isi.models.Payments;
 import edziekanat.isi.models.User;
 
 public class PaymentsDto {
-    private User user;
-    private float amount;
+    private Long userId;
+    private Long amount;
 
     public PaymentsDto(Payments payments) {
-        this.user = payments.getUserId();
+        this.userId = payments.getUser().getId();
         this.amount = payments.getAmount();
     }
 
 
-    public User getId() {
-        return user;
+    public Long getId() {
+        return userId;
     }
 
-    public void setId(User id) {
-        this.user = user;
+    public void setId(Long id) {
+        this.userId = id;
     }
 
-    public float getAmount() {
+    public Long getAmount() {
         return amount;
     }
 
-    public void setAmount(float amount) {
+    public void setAmount(Long amount) {
         this.amount = amount;
     }
 }
