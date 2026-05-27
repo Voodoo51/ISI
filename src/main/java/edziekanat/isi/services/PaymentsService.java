@@ -19,6 +19,7 @@ public class PaymentsService {
     private UserRepository userRepository;
     private OutboxRepository outboxRepository;
     private final KafkaProducerService kafkaService;
+    private final int retryCount = 0;
 
     public PaymentsService(PaymentsRepository paymentsRepository, OutboxRepository outboxRepository, UserRepository usersRepository, OutboxRepository outboxRepository1, KafkaProducerService kafkaService){
         this.paymentsRepository = paymentsRepository;
