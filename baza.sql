@@ -70,13 +70,20 @@ CREATE TABLE sent_form(
     form_data JSONB
 );
 
+CREATE TABLE payment_status(
+    id SERIAL primary key,
+    name varchar(20)
+);
+
 --dopisane //idk może trzeba dopisać fkey do form
-CREATE TABLE payments(
+CREATE TABLE payment(
       id BIGSERIAL primary key,
       user_id BIGINT references app_user(id),
-      sent_form_id BIGINT references sent_form(id),
-      amount BIGINT,
-      status varchar(20)
+      payment_status_id SERIAL references payment_status(id),
+      order_id text,
+      title varchar(40),
+      description text,
+      amount BIGINT
 );
 
 INSERT INTO user_role VALUES
@@ -102,3 +109,13 @@ INSERT INTO sent_form_status VALUES
 INSERT INTO oauth_provider VALUES
 (0, 'github');
 
+INSERT INTO payment_status VALUES
+(0, 'unpaid'),
+(1, 'pending'),
+(2, 'paid'),
+(3, 'canceled');
+
+INSERT INTO payment VALUES
+(0, 0, 0, null, 'Tytul 1', 'Opis 1', 10000),
+(1, 0, 0, null, 'Tytul 2', 'Opis 2', 5000),
+(2, 0, 0, null, 'Tytul 3', 'Opis 3', 1000);

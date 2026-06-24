@@ -120,7 +120,6 @@ public class AuthorizationService {
         }
 
         CustomUserDetails userDetails = new CustomUserDetails(authenticatedUser);
-        System.out.println(userDetails.getUserId());
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(
                         userDetails,

@@ -1,20 +1,19 @@
 package edziekanat.isi.controllers;
 
-import edziekanat.isi.dto.PaymentsDto;
+import edziekanat.isi.dto.PaymentDTO;
 import edziekanat.isi.services.KafkaProducerService;
-import edziekanat.isi.services.PaymentsService;
-import edziekanat.isi.services.PaymentsService;
+import edziekanat.isi.services.PaymentService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class KafkaController {
 
     private final KafkaProducerService producerService;
-    private final PaymentsService paymentsService;
+    private final PaymentService paymentService;
 
-    public KafkaController(KafkaProducerService producerService, PaymentsService paymentsService) {
+    public KafkaController(KafkaProducerService producerService, PaymentService paymentService) {
         this.producerService = producerService;
-        this.paymentsService = paymentsService;
+        this.paymentService = paymentService;
     }
 
     @GetMapping("/send")
@@ -24,8 +23,8 @@ public class KafkaController {
     }
 
     @PostMapping("/payment")
-    public String sendPayment(@RequestBody PaymentsDto request) {
-        paymentsService.crateNewPayment(request.getId(), request.getAmount());
+    public String sendPayment(@RequestBody PaymentDTO request) {
+        //paymentService.crateNewPayment(request.getId(), request.getAmount());
         return "Payment sent yey!";
     }
 }

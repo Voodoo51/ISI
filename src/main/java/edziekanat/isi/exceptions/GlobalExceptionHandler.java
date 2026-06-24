@@ -21,6 +21,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(e.getMessage());
     }
 
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<String> handlePaymentNotFound(PaymentNotFoundException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ExceptionHandler(PaymentProcessingErrorException.class)
+    public ResponseEntity<String> handlePaymentNotFound(PaymentProcessingErrorException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ExceptionHandler(PaymentAlreadyPaid.class)
+    public ResponseEntity<String> handlePaymentAlreadyPaid(PaymentAlreadyPaid e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
     @ExceptionHandler(FormTemplateNotFoundException.class)
     public ResponseEntity<String> handleFormTemplateNotFound(FormTemplateNotFoundException e) {
         return ResponseEntity.badRequest().body(e.getMessage());
