@@ -66,13 +66,11 @@ class AuthorizationServiceTest {
         Authentication auth = mock(Authentication.class);
         UserDetails userDetails = mock(UserDetails.class);
 
-        when(authenticationManager.authenticate(any()))
-                .thenReturn(auth);
+        when(authenticationManager.authenticate(any())).thenReturn(auth);
         when(auth.getPrincipal()).thenReturn(userDetails);
         when(userDetails.getUsername()).thenReturn("test@mail.com");
 
-        when(userRepository.findByEmail("test@mail.com"))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("test@mail.com")).thenReturn(Optional.of(user));
 
         UserPublicData result = authorizationService.login(loginRequest);
 
@@ -88,17 +86,13 @@ class AuthorizationServiceTest {
         Authentication auth = mock(Authentication.class);
         UserDetails userDetails = mock(UserDetails.class);
 
-        when(authenticationManager.authenticate(any()))
-                .thenReturn(auth);
+        when(authenticationManager.authenticate(any())).thenReturn(auth);
         when(auth.getPrincipal()).thenReturn(userDetails);
         when(userDetails.getUsername()).thenReturn("test@mail.com");
 
-        when(userRepository.findByEmail("test@mail.com"))
-                .thenReturn(Optional.empty());
+        when(userRepository.findByEmail("test@mail.com")).thenReturn(Optional.empty());
 
-        assertThrows(UserNotFoundException.class, () ->
-                authorizationService.login(loginRequest)
-        );
+        assertThrows(UserNotFoundException.class, () -> authorizationService.login(loginRequest));
     }
 
     @Test
@@ -109,11 +103,9 @@ class AuthorizationServiceTest {
         when(authentication.getPrincipal()).thenReturn(customUserDetails);
         when(customUserDetails.getUserId()).thenReturn(1L);
 
-        when(userRepository.findById(1L))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        UserPublicData result =
-                authorizationService.getUserPublicData(authentication);
+        UserPublicData result = authorizationService.getUserPublicData(authentication);
 
         assertNotNull(result);
         verify(userRepository).findById(1L);
@@ -121,8 +113,6 @@ class AuthorizationServiceTest {
 
     @Test
     void testNullUser() {
-        assertThrows(BadRequestException.class, () ->
-                authorizationService.getUserPublicData(null)
-        );
+        assertThrows(BadRequestException.class, () -> authorizationService.getUserPublicData(null));
     }
 }

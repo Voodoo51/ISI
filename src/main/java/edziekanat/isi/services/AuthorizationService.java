@@ -52,6 +52,8 @@ public class AuthorizationService {
     private OAuthUserRepository oAuthUserRepository;
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private GithubApiClient githubApiClient;
     @Value("${OATH_CLIENT_ID}")
     private String clientId;
 
@@ -76,24 +78,14 @@ public class AuthorizationService {
         if (provider.isEmpty()) throw new InternalServerErrorException("Provider not found: github");
 
         GithubTokenRequest githubTokenRequest = new GithubTokenRequest(clientId, clientSecret, code, redirectUri);
-        RestClient client = RestClient.create();
 
-        ResponseEntity<GithubToken> githubTokenResponse = client
-                .post().uri("https://github.com/login/oauth/access_token")
-                .header("Accept", "application/json")
-                .body(githubTokenRequest).retrieve().toEntity(GithubToken.class);
-
-        if(githubTokenResponse.getStatusCode().value() != 200) throw new BadRequestException("Github token fuckup."); // change this later
+        ResponseEntity<GithubToken> githubTokenResponse = githubApiClient.getToken(githubTokenRequest);
+        if(githubTokenResponse.getStatusCode().value() != 200) throw new BadRequestException("Github token error.");
 
         GithubToken token = githubTokenResponse.getBody();
-        if(token == null || token.getError() != null) throw new BadRequestException("Github token fuckup."); // change this later
+        if(token == null || token.getError() != null) throw new BadRequestException("Github token error.");
 
-        client = RestClient.create();
-        ResponseEntity<GithubUserData> userDataResponse = client
-                .get().uri("https://api.github.com/user")
-                .header("Authorization", "Bearer " + token.getAccess_token())
-                .header("Accept", "application/vnd.github+json")
-                .retrieve().toEntity(GithubUserData.class);
+        ResponseEntity<GithubUserData> userDataResponse = githubApiClient.getUserData(token);
 
         GithubUserData githubUserData = userDataResponse.getBody();
         if (githubUserData == null) throw new BadRequestException("GitHub user data error.");

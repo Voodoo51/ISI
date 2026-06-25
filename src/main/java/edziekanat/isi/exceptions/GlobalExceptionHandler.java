@@ -1,5 +1,6 @@
 package edziekanat.isi.exceptions;
 
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.http.ResponseEntity;
@@ -48,6 +49,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InternalServerErrorException.class)
     public ResponseEntity<String> handleInternalServer(InternalServerErrorException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ExceptionHandler(InternalAuthenticationServiceException.class)
+    public ResponseEntity<String> handleInternalAuthenticationServiceException(InternalAuthenticationServiceException e) {
         return ResponseEntity.badRequest().body(e.getMessage());
     }
 }

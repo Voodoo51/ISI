@@ -7,6 +7,9 @@ public class GithubToken {
     private String error;
     private String error_description;
 
+    public GithubToken() {
+    }
+
     public GithubToken(String access_token, String token_type, String scope, String error, String error_description) {
         this.access_token = access_token;
         this.token_type = token_type;

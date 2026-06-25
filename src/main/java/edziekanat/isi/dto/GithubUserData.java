@@ -5,6 +5,9 @@ public class GithubUserData {
     private String login;
     private String email;
 
+    public GithubUserData() {
+    }
+
     public GithubUserData(Long id, String login, String email) {
         this.id = id;
         this.login = login;

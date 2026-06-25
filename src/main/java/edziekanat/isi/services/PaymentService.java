@@ -29,6 +29,8 @@ public class PaymentService {
     private UserRepository userRepository;
     @Autowired
     private PaymentStatusRepository paymentStatusRepository;
+    @Autowired
+    private PayUClient payUClient;
     @Value("${PAYU_POS_ID}")
     private String posId;
     @Value("${PAYU_CLIENT_ID}")
@@ -71,73 +73,14 @@ public class PaymentService {
         Optional<PaymentStatus> pendingStatus = paymentStatusRepository.findById(1); // should already exist but just in case
         if (pendingStatus.isEmpty()) throw new InternalServerErrorException("Payment status not found.");
 
-        RestClient client = RestClient.create();
 
-        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        form.add("grant_type", "client_credentials");
-        form.add("client_id", clientId);
-        form.add("client_secret", clientSecret);
-
-        ResponseEntity<PayUAccessTokenResponse> payUAccessTokenRequest = client.post()
-                .uri("https://secure.snd.payu.com/pl/standard/user/oauth/authorize")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .accept(MediaType.APPLICATION_JSON)
-                .body(form)
-                .retrieve().toEntity(PayUAccessTokenResponse.class);
-
-        PayUAccessTokenResponse payUAccessTokenResponse = payUAccessTokenRequest.getBody();
-        if (payUAccessTokenResponse == null) {
-            throw new BadRequestException("PayU user data error.");
-        }
-
-
-        System.out.println(payUAccessTokenResponse.getAccess_token());
-
-        CreateOrderRequest order = new CreateOrderRequest();
-
-        order.setCustomerIp("127.0.0.1");
-        order.setMerchantPosId(posId);
-        order.setDescription(payment.get().getDescription());
-        order.setCurrencyCode("PLN");
-        order.setTotalAmount(payment.get().getAmount().toString());
-        order.setNotifyUrl("https://skiing-sandfish-purple.ngrok-free.dev/payment/notify");
-        order.setContinueUrl("http://localhost:3000/payment");
-        order.setProducts(List.of(
-                new Product(
-                        payment.get().getTitle(),
-                        payment.get().getAmount().toString(),
-                        "1"
-                )
-        ));
-        client = RestClient.create();
-        ResponseEntity<PayUPaymentResponse> paymentResponse = client.post()
-                .uri("https://secure.snd.payu.com/api/v2_1/orders")
-                .header("Authorization", "Bearer " + payUAccessTokenResponse.getAccess_token())
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .body(order)
-                .retrieve()
-                .onStatus(
-                        HttpStatusCode::isError,
-                        (req, res) -> {
-                            throw new RuntimeException(res.getStatusText());
-                        }
-                )
-                .toEntity(PayUPaymentResponse.class);
-
-
-        PayUPaymentResponse payUPaymentResponse = paymentResponse.getBody();
-        if(payUPaymentResponse == null)
-        {
-            throw new PaymentProcessingErrorException("PayU api response error.");
-        }
-
-        payment.get().setOrderId(paymentResponse.getBody().getOrderId());
+        PayUPaymentResponse paymentResponse = payUClient.createPayment(payment.get(), clientId, clientSecret, posId);
+        payment.get().setOrderId(paymentResponse.getOrderId());
         payment.get().setPaymentStatus(pendingStatus.get());
         paymentRepository.save(payment.get());
 
         System.out.println(paymentResponse);
-        return payUPaymentResponse.getRedirectUri();
+        return paymentResponse.getRedirectUri();
         //payment.get().setPaymentStatus(paidStatus.get());
         //paymentRepository.save(payment.get());
 
