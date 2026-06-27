@@ -1,8 +1,6 @@
 package edziekanat.isi.controllers;
 
-import edziekanat.isi.dto.PayUNotification;
-import edziekanat.isi.dto.PaymentDTO;
-import edziekanat.isi.dto.PaymentRequest;
+import edziekanat.isi.dto.*;
 import edziekanat.isi.models.Payment;
 import edziekanat.isi.services.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +30,29 @@ public class PaymentController {
         return ResponseEntity.ok(
                 Map.of("redirectUrl", redirectUrl)
         );
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<PaymentDTO> createPayment(
+            @RequestBody CreatePaymentRequest request){
+
+        return ResponseEntity.ok(paymentService.createPayment(request));
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<PaymentDTO> update(
+            @PathVariable Long id,
+            @RequestBody UpdatePaymentRequest request){
+
+        return ResponseEntity.ok(paymentService.update(id, request));
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id){
+
+        paymentService.delete(id);
+
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/callback")

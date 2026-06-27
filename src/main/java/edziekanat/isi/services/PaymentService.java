@@ -4,6 +4,7 @@ import edziekanat.isi.dto.*;
 import edziekanat.isi.exceptions.*;
 import edziekanat.isi.models.Payment;
 import edziekanat.isi.models.PaymentStatus;
+import edziekanat.isi.models.User;
 import edziekanat.isi.repositories.PaymentRepository;
 import edziekanat.isi.repositories.PaymentStatusRepository;
 import edziekanat.isi.repositories.UserRepository;
@@ -60,6 +61,62 @@ public class PaymentService {
         return false;
     }
 */
+
+    public PaymentDTO createPayment(CreatePaymentRequest request) {
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new UserNotFoundException());
+
+        PaymentStatus status = paymentStatusRepository.findById(0)
+                .orElseThrow(() -> new InternalServerErrorException("Status not found"));
+
+        Payment payment = new Payment();
+        payment.setUser(user);
+        payment.setPaymentStatus(status);
+        payment.setTitle(request.getTitle());
+        payment.setDescription(request.getDescription());
+        payment.setAmount(request.getAmount());
+
+        paymentRepository.save(payment);
+
+        return new PaymentDTO(payment);
+    }
+
+    public PaymentDTO update(Long id, UpdatePaymentRequest request){
+
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new PaymentNotFoundException("Payment not found"));
+
+        PaymentStatus unpaidStatus = paymentStatusRepository.findById(0)
+                .orElseThrow(() -> new InternalServerErrorException("Status not found"));
+
+        if(!payment.getPaymentStatus().getName().equals(unpaidStatus.getName())){
+            throw new PaymentAlreadyPaid("Cannot edit payment that is not of unpaid status.");
+        }
+
+        payment.setTitle(request.getTitle());
+        payment.setDescription(request.getDescription());
+        payment.setAmount(request.getAmount());
+
+        paymentRepository.save(payment);
+
+        return new PaymentDTO(payment);
+    }
+
+    public void delete(Long id){
+
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new PaymentNotFoundException("Payment not found"));
+
+        PaymentStatus paidStatus = paymentStatusRepository.findById(2)
+                .orElseThrow(() -> new InternalServerErrorException("Status not found"));
+
+        if(payment.getPaymentStatus().getName().equals(paidStatus.getName())){
+            throw new PaymentAlreadyPaid("Cannot delete payment that is of paid status.");
+        }
+
+        paymentRepository.delete(payment);
+    }
+
     public List<PaymentDTO> getAllUserPayments(Long userId) {
         return paymentRepository.findAllByUserId(userId).stream().map(PaymentDTO::new).toList();
     }
