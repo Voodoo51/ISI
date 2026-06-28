@@ -1,5 +1,6 @@
 package edziekanat.isi.exceptions;
 
+import edziekanat.isi.models.SentFormStatus;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -54,6 +55,31 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InternalAuthenticationServiceException.class)
     public ResponseEntity<String> handleInternalAuthenticationServiceException(InternalAuthenticationServiceException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<String> handleEmailAlreadyExistsException(EmailAlreadyExistsException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ExceptionHandler(FileErrorException.class)
+    public ResponseEntity<String> handleFileErrorException(FileErrorException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ExceptionHandler(SentFormNotFoundException.class)
+    public ResponseEntity<String> handleSentFormNotFoundException(SentFormNotFoundException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ExceptionHandler(SentFormStatusNotFoundException.class)
+    public ResponseEntity<String> handleSentFormStatusNotFoundException(SentFormStatusNotFoundException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ExceptionHandler(PropositionNotFoundException.class)
+    public ResponseEntity<String> handlePropositionNotFoundException(PropositionNotFoundException e) {
         return ResponseEntity.badRequest().body(e.getMessage());
     }
 }

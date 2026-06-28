@@ -100,7 +100,7 @@ class FormServiceTest {
         when(sentFormRepository.findByUserId(1L))
                 .thenReturn(new ArrayList<>());
 
-        List<FormTemplateListDTO> result =
+        List<StudentSentFormDTO> result =
                 formService.getFormTemplates(authentication);
 
         assertEquals(1, result.size());

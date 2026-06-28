@@ -9,18 +9,17 @@ public class UserPublicData {
     private String email;
     private String name;
     private String surname;
-    private UserRole role;
+    private String role;
 
     public UserPublicData(User user) {
         this.id = user.getId();
         this.email = user.getEmail();
         this.name = user.getName();
         this.surname = user.getSurname();
-        this.role = user.getRole();
-        this.role = user.getRole();
+        this.role = user.getRole().getName();
     }
 
-    public UserPublicData(Long id, String email, String name, String surname, UserRole role) {
+    public UserPublicData(Long id, String email, String name, String surname, String role) {
         this.id = id;
         this.email = email;
         this.name = name;
@@ -60,11 +59,11 @@ public class UserPublicData {
         this.surname = surname;
     }
 
-    public UserRole getRole() {
+    public String getRole() {
         return role;
     }
 
-    public void setRole(UserRole role) {
+    public void setRole(String role) {
         this.role = role;
     }
 }

@@ -1,37 +1,27 @@
 package edziekanat.isi.dto;
 
-import edziekanat.isi.models.SentForm;
-
 import java.time.LocalDateTime;
 
-//change the DTO appendix to something different
-public class SentFormDTO {
+public class SentFormDetailsDTO {
     private Long id;
     private Integer templateId;
     private String templateTitle;
     private LocalDateTime sentAt;
+    private String response;
     private UserPublicData user;
     private Integer statusId;
 
-    public SentFormDTO() {
+    public SentFormDetailsDTO() {
     }
 
-    public SentFormDTO(Long id, Integer templateId, String templateTitle, LocalDateTime sentAt, UserPublicData user, Integer statusId) {
+    public SentFormDetailsDTO(Long id, Integer templateId, String templateTitle, LocalDateTime sentAt, String response, UserPublicData user, Integer statusId) {
         this.id = id;
         this.templateId = templateId;
         this.templateTitle = templateTitle;
         this.sentAt = sentAt;
+        this.response = response;
         this.user = user;
         this.statusId = statusId;
-    }
-
-    public SentFormDTO(SentForm sentForm) {
-        this.id = sentForm.getId();
-        this.templateId = sentForm.getFormTemplate().getId();
-        this.templateTitle = sentForm.getFormTemplate().getTitle();
-        this.sentAt = sentForm.getSentAt();
-        this.user = new UserPublicData(sentForm.getUser());
-        this.statusId = sentForm.getStatus().getId();
     }
 
     public Long getId() {
@@ -64,6 +54,14 @@ public class SentFormDTO {
 
     public void setSentAt(LocalDateTime sentAt) {
         this.sentAt = sentAt;
+    }
+
+    public String getResponse() {
+        return response;
+    }
+
+    public void setResponse(String response) {
+        this.response = response;
     }
 
     public UserPublicData getUser() {

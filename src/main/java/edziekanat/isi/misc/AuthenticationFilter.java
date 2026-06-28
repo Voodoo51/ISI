@@ -50,6 +50,29 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     @Override
+    protected void successfulAuthentication(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain chain,
+            Authentication authResult
+    ) throws IOException, ServletException {
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authResult);
+
+        SecurityContextHolder.setContext(context);
+
+        HttpSession session = request.getSession(true);
+        session.setAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                context
+        );
+
+        response.setStatus(HttpServletResponse.SC_OK);
+    }
+
+    /*
+    @Override
     protected void successfulAuthentication(HttpServletRequest request,
                                             HttpServletResponse response,
                                             FilterChain chain,
@@ -60,8 +83,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         context.setAuthentication(authResult);
         SecurityContextHolder.setContext(context);
 
-        SecurityContextRepository repo =
-                new HttpSessionSecurityContextRepository();
+        SecurityContextRepository repo = new HttpSessionSecurityContextRepository();
 
         repo.saveContext(context, request, response);
 
@@ -86,5 +108,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         response.setContentType("application/json");
         // this makes session persist automatically
          */
-    }
+  //}
+
 }

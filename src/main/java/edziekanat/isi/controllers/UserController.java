@@ -62,6 +62,7 @@ public class UserController {
     @PostMapping("/logout")
     public void logout(HttpSession session) {
         try {
+            System.out.println("TEST");
             session.invalidate();
         } catch (IllegalStateException ignored) {
 

@@ -54,7 +54,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**", "/user/register", "/swagger-ui/**", "/v3/api-docs/**", "/send", "/form/**", "/payment/notify").permitAll()
                 .anyRequest()
                 .authenticated())
-            .addFilterAt(filter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
             .formLogin(form -> form.disable())
             .logout(logout -> logout
                     .logoutSuccessHandler((request, response, authentication) -> {

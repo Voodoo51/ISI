@@ -1,18 +1,11 @@
 package edziekanat.isi.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import edziekanat.isi.dto.FormTemplateCreationRequest;
-import edziekanat.isi.dto.FormTemplateListDTO;
-import edziekanat.isi.dto.FormTemplateDTO;
-import edziekanat.isi.dto.SendFormRequest;
-import edziekanat.isi.dto.SentFormDTO;
-import edziekanat.isi.exceptions.FormTemplateNotFoundException;
-import edziekanat.isi.exceptions.InternalServerErrorException;
-import edziekanat.isi.exceptions.UnauthorizedException;
-import edziekanat.isi.exceptions.UserNotFoundException;
+import edziekanat.isi.dto.*;
+import edziekanat.isi.exceptions.*;
 import edziekanat.isi.misc.CustomUserDetails;
 import edziekanat.isi.misc.FormField;
 import edziekanat.isi.misc.FormFilledField;
+import edziekanat.isi.misc.SentFormStatusE;
 import edziekanat.isi.models.FormTemplate;
 import edziekanat.isi.models.SentForm;
 import edziekanat.isi.models.SentFormStatus;
@@ -21,17 +14,21 @@ import edziekanat.isi.repositories.FormTemplateRepository;
 import edziekanat.isi.repositories.SentFormRepository;
 import edziekanat.isi.repositories.SentFormStatusRepository;
 import edziekanat.isi.repositories.UserRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLOutput;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class FormService {
@@ -53,6 +50,12 @@ public class FormService {
                 .collect(Collectors.toList());
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
+    public Page<SentFormDTO> getAllSentForms(Pageable pageable) {
+        return sentFormRepository.findAll(pageable).map(SentFormDTO::new);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
     public void createFormTemplate(FormTemplateCreationRequest formTemplateCreationRequest) {
         String title = formTemplateCreationRequest.getTitle();
         List<FormField> formFields = formTemplateCreationRequest.getFormFields();
@@ -62,42 +65,45 @@ public class FormService {
         formTemplateRepository.save(newFormTemplate);
     }
 
-    public List<FormTemplateListDTO> getFormTemplates(Authentication authentication) {
+    public Page<StudentSentFormDTO> getFormTemplates(Pageable pageable, Authentication authentication) {
         CustomUserDetails userDetails = CheckAuth(authentication);
 
-        List<SentForm> sentForms =  sentFormRepository.findByUserId(userDetails.getUserId());
-        return formTemplateRepository.findAll()
+        Map<Integer, Integer> statusByTemplateId = sentFormRepository.findByUserId(userDetails.getUserId())
                 .stream()
-                .map(template ->  {
-                    Optional<SentForm> sentForm = sentForms.stream()
-                                    .filter(sf -> sf.getFormTemplate().getId() == template.getId())
-                                    .findFirst();
+                .collect(Collectors.toMap(
+                        sf -> sf.getFormTemplate().getId(),
+                        sf -> sf.getStatus().getId()
+                ));
 
-                    Integer statusId = 3;
-                    if(sentForm.isPresent()) statusId = sentForm.get().getStatus().getId();
-
-                    return new FormTemplateListDTO(template.getId(), statusId, template.getTitle());
-                }).toList();
-//                .map(template -> new FormTemplateListDTO(template.getId(), template.getTitle())).toList();
+        return formTemplateRepository.findAll(pageable)
+                .map(template -> new StudentSentFormDTO(
+                        template.getId(),
+                        statusByTemplateId.getOrDefault(
+                                template.getId(),
+                                SentFormStatusE.NOT_SENT.getId()
+                        ),
+                        template.getTitle()
+                ));
     }
 
-    public FormTemplateDTO getTemplate(Integer templateId, Authentication authentication) {
-        CustomUserDetails userDetails = CheckAuth(authentication);
-
-        Optional<FormTemplate> formTemplate = formTemplateRepository.findById(templateId);
-        if(formTemplate.isEmpty()) throw new FormTemplateNotFoundException(templateId.toString());
+    public FormTemplateDTO getTemplate(Integer formTemplateId, Long userId) {
+        Optional<FormTemplate> formTemplate = formTemplateRepository.findById(formTemplateId);
+        if(formTemplate.isEmpty()) throw new FormTemplateNotFoundException(formTemplateId.toString());
 
         List<FormFilledField> formFilledFields = new ArrayList<>();
-        Optional<SentForm> sentForm = sentFormRepository.findByUserIdAndFormTemplateId(userDetails.getUserId(), templateId);
-        Integer statusId = 3;
+        Optional<SentForm> sentForm = sentFormRepository.findByUserIdAndFormTemplateId(userId, formTemplateId);
+        Integer statusId = SentFormStatusE.NOT_SENT.getId();
+        String response = "";
         if(sentForm.isPresent()) {
             formFilledFields = sentForm.get().getFormData();
             statusId = sentForm.get().getStatus().getId();
+            response = sentForm.get().getResponse();
         }
 
         FormTemplateDTO formTemplateDTO = new FormTemplateDTO(formTemplate.get());
         formTemplateDTO.setFormFilledFields(formFilledFields);
         formTemplateDTO.setStatusId(statusId);
+        formTemplateDTO.setResponse(response);
 
         return formTemplateDTO;
     }
@@ -118,19 +124,38 @@ public class FormService {
 
         SentForm newSentForm;
         if(sentForm.isPresent()) {
+            if(sentForm.get().getStatus().getId() != SentFormStatusE.IN_NEED_OF_UPDATE.getId()) throw new UnauthorizedException(); //ig this counts as unauthorized? I think?
             newSentForm = new SentForm(sentForm.get().getId(), user.get(), formTemplate.get(), status.get(), request.getFormData());
         }
         else {
             newSentForm = new SentForm(user.get(), formTemplate.get(), status.get(), request.getFormData());
         }
 
+
         sentFormRepository.save(newSentForm);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
+    @Transactional
+    public void updateSentFormStatus(UpdateSentFormRequest request, Authentication authentication) {
+        CustomUserDetails userDetails = CheckAuth(authentication);
+
+        SentForm sentForm = sentFormRepository.findById(request.getSentFormId()).orElseThrow(SentFormNotFoundException::new);
+        SentFormStatus status = sentFormStatusRepository.findById(request.getNewStatusId()).orElseThrow(SentFormStatusNotFoundException::new);
+
+        sentForm.setResponse(request.getResponse());
+        sentForm.setStatus(status);
+
+        sentFormRepository.save(sentForm);
+    }
+
     private CustomUserDetails CheckAuth(Authentication authentication) {
+        System.out.println(authentication);
+
         if(authentication == null) throw new UnauthorizedException();
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
         if(userDetails == null) throw new UnauthorizedException();
 
         return userDetails;

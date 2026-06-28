@@ -67,6 +67,8 @@ CREATE TABLE sent_form(
     user_id int references app_user(id),
     form_template_id int references form_template(id),
     status_id int references sent_form_status(id),
+    sent_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    response text, -- this should rarely be used so i tihnk its fine
     form_data JSONB
 );
 
@@ -86,6 +88,38 @@ CREATE TABLE payment(
       amount BIGINT
 );
 
+CREATE TABLE proposition(
+    id BIGSERIAL primary key,
+    user_id BIGINT references app_user(id),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    title varchar(50),
+    description text
+);
+
+CREATE TABLE proposition_file(
+    id BIGSERIAL primary key,
+    proposition_id BIGINT references proposition(id),
+    file_name varchar(255),
+    file_size BIGINT,
+    data BYTEA
+);
+
+CREATE TABLE proposition_message(
+    id BIGSERIAL primary key,
+    proposition_id BIGINT REFERENCES proposition(id),
+    user_id BIGINT references app_user(id),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    message text
+);
+
+CREATE TABLE proposition_message_file(
+    id BIGSERIAL primary key,
+    proposition_message_id BIGINT references proposition_message(id),
+    file_name varchar(255),
+    file_size BIGINT,
+    data BYTEA
+);
+
 INSERT INTO user_role VALUES
 (0, 'admin'),
 (1, 'supervisor'),
@@ -93,6 +127,17 @@ INSERT INTO user_role VALUES
 (3, 'student');
 
 INSERT INTO app_user VALUES (0, 0, 'admin@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'admin', 'kowalski');
+INSERT INTO app_user VALUES (1, 1, 'supervisor@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'supervisor', 'kowalski');
+INSERT INTO app_user VALUES (2, 2, 'worker@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'worker', 'kowalski');
+INSERT INTO app_user VALUES (3, 3, 'student1@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'Szymon', 'Błaszczyk');
+INSERT INTO app_user VALUES (4, 3, 'student2@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'Katarzyna', 'Stępień');
+INSERT INTO app_user VALUES (5, 3, 'student3@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'Cezary', 'Buła');
+INSERT INTO app_user VALUES (6, 3, 'student4@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'Szymon', 'Dziadek');
+INSERT INTO app_user VALUES (7, 3, 'student5@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'Joanna', 'Bombol');
+INSERT INTO app_user VALUES (8, 3, 'student6@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'Maksymilian', 'Sulecki');
+INSERT INTO app_user VALUES (9, 3, 'student7@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'Olivia', 'Pacoha');
+INSERT INTO app_user VALUES (10, 3, 'student8@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'student', 'kowalski');
+INSERT INTO app_user VALUES (11, 3, 'student9@gmail.com', '$2a$10$j9Hadn8DmGYa4P5Sw.JPBuEOkVx1/hypk7JDSxRE5Q3xrbH30d4c6', 'student', 'kowalski');
 
 INSERT INTO sent_form_status VALUES
 (0, 'accepted'),
@@ -101,7 +146,7 @@ INSERT INTO sent_form_status VALUES
 (3, 'not_sent'),
 (4, 'in_need_of_update');
 
-    INSERT INTO form_template VALUES
+INSERT INTO form_template VALUES
 (0, '2026-05-27 19:03:39.91878', 'Form 1', '[{"id": 1, "label": "Numer telefonu", "type": "phoneNumber", "placeholder": "570678420"}, {"id": 2, "label": "Email", "type": "email", "placeholder": "nazwa@gmail.com"}]'),
 (1, '2026-05-27 19:04:38.857737', 'Form 2', '[{"id": 1, "label": "Wydział", "type": "none", "placeholder": "WEAIL"}, {"id": 2, "label": "Dowolny wpis", "type": "none", "placeholder": "Wpis"}]'),
 (2, '2026-05-27 19:05:31.703989', 'Form 3', '[{"id": 1, "label": "PESEL", "type": "none", "placeholder": "0325102358"}, {"id": 2, "label": "Kierunek", "type": "none", "placeholder": "Informatyka"}]');
