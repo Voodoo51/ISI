@@ -54,6 +54,7 @@ CREATE TABLE form_template(
     id SERIAL primary key,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     title varchar(60),
+    form_pdf bytea,
     form_fields JSONB
 );
 
@@ -146,10 +147,11 @@ INSERT INTO sent_form_status VALUES
 (3, 'not_sent'),
 (4, 'in_need_of_update');
 
-INSERT INTO form_template VALUES
-(0, '2026-05-27 19:03:39.91878', 'Form 1', '[{"id": 1, "label": "Numer telefonu", "type": "phoneNumber", "placeholder": "570678420"}, {"id": 2, "label": "Email", "type": "email", "placeholder": "nazwa@gmail.com"}]'),
-(1, '2026-05-27 19:04:38.857737', 'Form 2', '[{"id": 1, "label": "Wydział", "type": "none", "placeholder": "WEAIL"}, {"id": 2, "label": "Dowolny wpis", "type": "none", "placeholder": "Wpis"}]'),
-(2, '2026-05-27 19:05:31.703989', 'Form 3', '[{"id": 1, "label": "PESEL", "type": "none", "placeholder": "0325102358"}, {"id": 2, "label": "Kierunek", "type": "none", "placeholder": "Informatyka"}]');
+--
+--INSERT INTO form_template VALUES
+--(0, '2026-05-27 19:03:39.91878', 'Form 1', '[{"id": 1, "label": "Numer telefonu", "type": "phoneNumber", "placeholder": "570678420"}, {"id": 2, "label": "Email", "type": "email", "placeholder": "nazwa@gmail.com"}]'),
+--(1, '2026-05-27 19:04:38.857737', 'Form 2', '[{"id": 1, "label": "Wydział", "type": "none", "placeholder": "WEAIL"}, {"id": 2, "label": "Dowolny wpis", "type": "none", "placeholder": "Wpis"}]'),
+--(2, '2026-05-27 19:05:31.703989', 'Form 3', '[{"id": 1, "label": "PESEL", "type": "none", "placeholder": "0325102358"}, {"id": 2, "label": "Kierunek", "type": "none", "placeholder": "Informatyka"}]');
 
 INSERT INTO oauth_provider VALUES
 (0, 'github');

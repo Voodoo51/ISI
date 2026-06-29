@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,10 +71,11 @@ class FormServiceTest {
     void testCreateFormTemplate() {
         FormTemplateCreationRequest request = mock(FormTemplateCreationRequest.class);
 
+        MultipartFile file = null;
         when(request.getTitle()).thenReturn("Test");
         when(request.getFormFields()).thenReturn(new ArrayList<>());
 
-        formService.createFormTemplate(request);
+        formService.createFormTemplate(request, file);
 
         verify(formTemplateRepository).save(any(FormTemplate.class));
     }
