@@ -160,7 +160,9 @@ INSERT INTO payment_status VALUES
 (0, 'unpaid'),
 (1, 'pending'),
 (2, 'paid'),
-(3, 'canceled');
+(3, 'canceled'),
+(4, 'initiated'),
+(5, 'failed');
 
 INSERT INTO payment VALUES
 (0, 0, 0, null, 'Tytul 1', 'Opis 1', 10000),

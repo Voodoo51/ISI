@@ -126,8 +126,8 @@ public class PaymentService {
         if(payment.isEmpty()) throw new PaymentNotFoundException("Payment not found.");
         if(payment.get().getPaymentStatus().getName().equals("paid")) throw new PaymentAlreadyPaid("Payment already paid.");
 
-        //1 is pending, 2 is paid
-        Optional<PaymentStatus> pendingStatus = paymentStatusRepository.findById(1); // should already exist but just in case
+        //initiated
+        Optional<PaymentStatus> pendingStatus = paymentStatusRepository.findById(4); // should already exist but just in case
         if (pendingStatus.isEmpty()) throw new InternalServerErrorException("Payment status not found.");
 
 
@@ -136,26 +136,26 @@ public class PaymentService {
         payment.get().setPaymentStatus(pendingStatus.get());
         paymentRepository.save(payment.get());
 
-        System.out.println(paymentResponse);
         return paymentResponse.getRedirectUri();
-        //payment.get().setPaymentStatus(paidStatus.get());
-        //paymentRepository.save(payment.get());
 
-        //return redirectUri;
     }
 
     public void finalizePayment(PayUNotification notification) {
         String orderId = notification.getOrder().getOrderId();
         String status = notification.getOrder().getStatus();
 
-        System.out.println("TESTSE T");
-
         Optional<Payment> paymentOp = paymentRepository.findByOrderId(orderId);
         if(paymentOp.isEmpty()) throw new PaymentNotFoundException("Payment not found.");
 
-
         Payment payment = paymentOp.get();
-        System.out.println(status);
+        if (payment.getOrderId() == null) {
+            throw new IllegalStateException("Invalid payment state");
+        }
+
+        if (payment.getPaymentStatus().getName().equals("paid")) {
+            return;
+        }
+
         switch (status) {
             case "COMPLETED":
                 Optional<PaymentStatus> paidStatus = paymentStatusRepository.findById(2); // should already exist but just in case
@@ -174,6 +174,15 @@ public class PaymentService {
                 if(canceledStatus.isEmpty()) throw new InternalServerErrorException("Status not found.");
                 payment.setPaymentStatus(canceledStatus.get());
                 break;
+
+            case "FAILED":
+                Optional<PaymentStatus> failedStatus = paymentStatusRepository.findById(5); // should already exist but just in case
+                if(failedStatus.isEmpty()) throw new InternalServerErrorException("Status not found.");
+                payment.setPaymentStatus(failedStatus.get());
+                break;
+
+            default:
+                throw new IllegalStateException("Unknown status: " + status);
         }
 
         paymentRepository.save(payment);

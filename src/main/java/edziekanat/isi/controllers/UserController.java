@@ -14,6 +14,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,9 +25,10 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
     @PostMapping("/register")
-    public ResponseEntity<UserPublicData> register(@Validated @RequestBody RegisterRequest registerRequest) {
-        UserPublicData userPublicData = userService.register(registerRequest);
+    public ResponseEntity<UserPublicData> register(@Validated @RequestBody RegisterRequest registerRequest, Authentication authentication) {
+        UserPublicData userPublicData = userService.register(registerRequest, authentication);
         return ResponseEntity.ok(userPublicData);
     }
 
@@ -46,6 +49,21 @@ public class UserController {
         );
 
         return ResponseEntity.ok(userService.getAllUsers(pageable));
+    }
+
+    @GetMapping("/all/search")
+    public ResponseEntity<Page<UserPublicData>> searchUsers(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.ASC, "surname")
+        );
+
+        return ResponseEntity.ok(userService.searchUsers(query, pageable));
     }
 
     /*

@@ -1,15 +1,28 @@
 package edziekanat.isi.repositories;
 
 import edziekanat.isi.models.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findById(Long id);
     Optional<User> findByEmail(String email);
+
+    @Query("""
+    SELECT u
+    FROM User u
+    WHERE LOWER(CONCAT(u.name, ' ', u.surname)) LIKE LOWER(CONCAT('%', :query, '%'))
+    """)
+    Page<User> search(@Param("query") String query, Pageable page);
+
     /*
     private final JdbcTemplate jdbcTemplate; //move this to a signle file
 

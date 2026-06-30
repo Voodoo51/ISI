@@ -2,6 +2,7 @@ package edziekanat.isi;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.cors.*;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
@@ -19,6 +20,7 @@ public class CorsConfig {
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
+        config.setExposedHeaders(List.of(HttpHeaders.CONTENT_DISPOSITION)); //needed to get file names etc
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();

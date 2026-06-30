@@ -1,10 +1,17 @@
 package edziekanat.isi.dto;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class CreatePaymentRequest {
 
+    @NotNull(message = "paymentUserEmptyError")
     private Long userId;
+    @NotBlank(message = "paymentTitleEmptyError")
     private String title;
     private String description;
+    @NotNull(message = "paymentAmountEmptyError")
     private Long amount;
 
     public Long getUserId() {
