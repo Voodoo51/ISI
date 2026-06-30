@@ -7,10 +7,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/form")
@@ -21,6 +25,7 @@ public class FormController {
     //Change the name of this DTO class!!!!
     @GetMapping("/sent")
     public ResponseEntity<Page<StudentSentFormDTO>>getAllForms(
+            @RequestParam(required = false) Integer statusId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
@@ -31,23 +36,51 @@ public class FormController {
                 Sort.by(Sort.Direction.DESC, "id")
         );
 
-        return ResponseEntity.ok(formService.getFormTemplates(pageable, authentication));
+        return ResponseEntity.ok(formService.getFormTemplates(statusId, pageable, authentication));
         //return ResponseEntity.ok().build();
         //return ResponseEntity.ok(formService.getSentForms(userId));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
     @GetMapping("/sent/all")
     public ResponseEntity<Page<SentFormDTO>> getAllForms(
+            @RequestParam(required = false) Integer statusId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(
                 page,
-                size,
-                Sort.by(Sort.Direction.DESC, "id")
+                size
         );
 
-        return ResponseEntity.ok(formService.getAllSentForms(pageable));
+        return ResponseEntity.ok(formService.getAllSentForms(statusId, pageable));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER','STUDENT')")
+    @GetMapping("/sent/search")
+    public ResponseEntity<Page<SentFormDTO>> searchForms(
+            @RequestParam String query,
+            @RequestParam(required = false) Integer statusId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication
+    ) {
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "sentAt")
+        );
+
+
+        return ResponseEntity.ok(
+                formService.searchSentForms(
+                        query,
+                        statusId,
+                        pageable,
+                        authentication
+                )
+        );
     }
 
     @PutMapping("/sent/update")
@@ -58,9 +91,12 @@ public class FormController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<Void> createFormTemplate(@Validated @RequestBody FormTemplateCreationRequest formTemplateCreationRequest) {
-        formService.createFormTemplate(formTemplateCreationRequest);
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> createFormTemplate(
+            @RequestPart("request") FormTemplateCreationRequest formTemplateCreationRequest,
+            @RequestPart("file") MultipartFile pdfFile) {
+        formService.createFormTemplate(formTemplateCreationRequest, pdfFile);
         return ResponseEntity.ok().build();
     }
 
@@ -74,6 +110,16 @@ public class FormController {
     public ResponseEntity<FormTemplateDTO> getTemplate(@RequestParam Integer formTemplateId, @RequestParam Long userId) {
         FormTemplateDTO formTemplateDTO = formService.getTemplate(formTemplateId, userId);
         return ResponseEntity.ok(formTemplateDTO);
+    }
+
+    @GetMapping("template/file/{templateId}")
+    public ResponseEntity<byte[]> getTemplateFile(@PathVariable Integer templateId) {
+        FormTemplateFileDTO formTemplateFileDTO = formService.getTemplatePdf(templateId);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + formTemplateFileDTO.getTitle() + ".pdf")
+                .body(formTemplateFileDTO.getPdfFile());
     }
 
     /*

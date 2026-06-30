@@ -3,6 +3,7 @@ package edziekanat.isi.dto;
 import edziekanat.isi.misc.FormFilledField;
 import edziekanat.isi.models.FormTemplate;
 import edziekanat.isi.misc.FormField;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -21,6 +21,9 @@ public class FormTemplate {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "form_fields", columnDefinition = "jsonb")
     private List<FormField> formFields;
+    @Column
+    private byte[] form_pdf;
+
     public FormTemplate() {
     }
 
@@ -31,10 +34,11 @@ public class FormTemplate {
         this.formFields = formFields;
     }
 
-    public FormTemplate(LocalDateTime createdAt, String title, List<FormField> formFields) {
+    public FormTemplate(LocalDateTime createdAt, String title, List<FormField> formFields, byte[] form_pdf) {
         this.createdAt = createdAt;
         this.title = title;
         this.formFields = formFields;
+        this.form_pdf = form_pdf;
     }
 
     /*
@@ -52,11 +56,11 @@ public class FormTemplate {
     }
      */
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -82,5 +86,13 @@ public class FormTemplate {
 
     public void setFormFields(List<FormField> formFields) {
         this.formFields = formFields;
+    }
+
+    public byte[] getForm_pdf() {
+        return form_pdf;
+    }
+
+    public void setForm_pdf(byte[] form_pdf) {
+        this.form_pdf = form_pdf;
     }
 }
