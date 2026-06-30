@@ -61,7 +61,25 @@ public class PaymentService {
         return false;
     }
 */
+    public PaymentDTO payedOffline(Long paymentId) {
 
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException("Payment not found"));
+
+        PaymentStatus paidStatus = paymentStatusRepository.findById(2)
+                .orElseThrow(() -> new InternalServerErrorException("Status not found"));
+
+        if (payment.getPaymentStatus().getName().equals(paidStatus.getName())) {
+            throw new PaymentAlreadyPaid("Payment already paid.");
+        }
+
+        payment.setPaymentStatus(paidStatus);
+
+        paymentRepository.save(payment);
+
+        return new PaymentDTO(payment);
+    }
+    
     public PaymentDTO createPayment(CreatePaymentRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(UserNotFoundException::new);

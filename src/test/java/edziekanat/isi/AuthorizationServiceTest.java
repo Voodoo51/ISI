@@ -7,6 +7,7 @@ import edziekanat.isi.exceptions.InternalServerErrorException;
 import edziekanat.isi.exceptions.UserNotFoundException;
 import edziekanat.isi.misc.CustomUserDetails;
 import edziekanat.isi.models.User;
+import edziekanat.isi.models.UserRole;
 import edziekanat.isi.repositories.OAuthProviderRepository;
 import edziekanat.isi.repositories.UserRepository;
 import edziekanat.isi.services.AuthorizationService;
@@ -66,6 +67,10 @@ class AuthorizationServiceTest {
         Authentication auth = mock(Authentication.class);
         UserDetails userDetails = mock(UserDetails.class);
 
+        UserRole role = mock(UserRole.class);
+        when(role.getName()).thenReturn("STUDENT");
+        when(user.getRole()).thenReturn(role);
+
         when(authenticationManager.authenticate(any())).thenReturn(auth);
         when(auth.getPrincipal()).thenReturn(userDetails);
         when(userDetails.getUsername()).thenReturn("test@mail.com");
@@ -99,6 +104,10 @@ class AuthorizationServiceTest {
     void testReturnUserData() {
         CustomUserDetails customUserDetails = mock(CustomUserDetails.class);
         Authentication authentication = mock(Authentication.class);
+
+        UserRole role = mock(UserRole.class);
+        when(role.getName()).thenReturn("STUDENT");
+        when(user.getRole()).thenReturn(role);
 
         when(authentication.getPrincipal()).thenReturn(customUserDetails);
         when(customUserDetails.getUserId()).thenReturn(1L);

@@ -1,8 +1,13 @@
 package edziekanat.isi.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 public class UpdatePaymentRequest {
     private String title;
     private String description;
+    @Min(value = 1, message = "Amount must be at least 1")
+    @Max(value = 1000, message = "Amount must be at most 1000")
     private Long amount;
 
     public String getTitle() {

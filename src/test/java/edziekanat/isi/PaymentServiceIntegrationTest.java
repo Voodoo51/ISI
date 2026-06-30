@@ -203,26 +203,36 @@ class PaymentServiceIntegrationTest {
 
     @Test
     void shouldProcessPayment() {
-        UserRole role = userRoleRepository.findByName("student").orElseThrow();
+        UserRole role = userRoleRepository.findByName("student")
+                .orElseThrow();
+
         User user = userRepository.save(
                 new User(role, "john", "", "john@test.com", "")
         );
 
-        PaymentStatus unpaid = paymentStatusRepository.findByName("unpaid").orElseThrow();
+        PaymentStatus unpaid = paymentStatusRepository.findByName("unpaid")
+                .orElseThrow();
+
 
         Payment payment = new Payment();
+
         payment.setUser(user);
         payment.setTitle("Tuition fee");
         payment.setDescription("Semester payment");
         payment.setAmount(10000L);
         payment.setPaymentStatus(unpaid);
 
+
         payment = paymentRepository.save(payment);
+
 
         PayUPaymentResponse payUResponse = new PayUPaymentResponse();
 
         payUResponse.setOrderId("ORDER123");
-        payUResponse.setRedirectUri("https://secure.snd.payu.com/pay");
+        payUResponse.setRedirectUri(
+                "https://secure.snd.payu.com/pay"
+        );
+
 
         when(payUClient.createPayment(
                 eq(payment),
@@ -231,15 +241,39 @@ class PaymentServiceIntegrationTest {
                 anyString()
         )).thenReturn(payUResponse);
 
-        String redirectUrl = paymentService.processPayment(new PaymentRequest(payment.getId()));
 
-        assertEquals("https://secure.snd.payu.com/pay", redirectUrl);
-        assertEquals( "ORDER123",payment.getOrderId());
+        String redirectUrl =
+                paymentService.processPayment(
+                        new PaymentRequest(payment.getId())
+                );
 
-        Payment updated = paymentRepository.findById(payment.getId()).orElseThrow();
 
-        assertEquals("ORDER123", updated.getOrderId());
-        assertEquals("pending", updated.getPaymentStatus().getName());
+        assertEquals(
+                "https://secure.snd.payu.com/pay",
+                redirectUrl
+        );
+
+        assertEquals(
+                "ORDER123",
+                payment.getOrderId()
+        );
+
+
+        Payment updated =
+                paymentRepository.findById(payment.getId())
+                        .orElseThrow();
+
+
+        assertEquals(
+                "ORDER123",
+                updated.getOrderId()
+        );
+
+
+        assertEquals(
+                "initiated",
+                updated.getPaymentStatus().getName()
+        );
     }
 
     @Test

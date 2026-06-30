@@ -4,10 +4,8 @@ import edziekanat.isi.dto.*;
 import edziekanat.isi.exceptions.FormTemplateNotFoundException;
 import edziekanat.isi.exceptions.UnauthorizedException;
 import edziekanat.isi.misc.CustomUserDetails;
-import edziekanat.isi.models.FormTemplate;
-import edziekanat.isi.models.SentForm;
-import edziekanat.isi.models.SentFormStatus;
-import edziekanat.isi.models.User;
+import edziekanat.isi.misc.SentFormStatusE;
+import edziekanat.isi.models.*;
 import edziekanat.isi.repositories.FormTemplateRepository;
 import edziekanat.isi.repositories.SentFormRepository;
 import edziekanat.isi.repositories.SentFormStatusRepository;
@@ -20,15 +18,20 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -54,8 +57,17 @@ class FormServiceTest {
         FormTemplate template = new FormTemplate();
         template.setId(1);
 
+        User user = new User();
+        user.setId(1L);
+
+        UserRole role = new UserRole();
+        role.setName("student");
+
+        user.setRole(role);
+
         SentForm sentForm = new SentForm();
         sentForm.setId(1L);
+        sentForm.setUser(user);
         sentForm.setStatus(new SentFormStatus(1, "status"));
         sentForm.setFormTemplate(template);
 
@@ -68,12 +80,20 @@ class FormServiceTest {
     }
 
     @Test
-    void testCreateFormTemplate() {
+    void testCreateFormTemplate() throws IOException {
         FormTemplateCreationRequest request = mock(FormTemplateCreationRequest.class);
 
-        MultipartFile file = null;
+        MultipartFile file = mock(MultipartFile.class);
+
         when(request.getTitle()).thenReturn("Test");
         when(request.getFormFields()).thenReturn(new ArrayList<>());
+
+        when(file.getBytes())
+                .thenReturn(new byte[]{1,2,3});
+
+        when(file.getOriginalFilename())
+                .thenReturn("test.pdf");
+
 
         formService.createFormTemplate(request, file);
 
@@ -96,17 +116,21 @@ class FormServiceTest {
         FormTemplate template = mock(FormTemplate.class);
         when(template.getId()).thenReturn(10);
 
-        when(formTemplateRepository.findAll())
-                .thenReturn(List.of(template));
+        when(formTemplateRepository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(template)));
 
         when(sentFormRepository.findByUserId(1L))
                 .thenReturn(new ArrayList<>());
 
-        List<StudentSentFormDTO> result =
-                formService.getFormTemplates(authentication);
+        Page<StudentSentFormDTO> result =
+                formService.getFormTemplates(
+                        null,
+                        PageRequest.of(0, 10),
+                        authentication
+                );
 
-        assertEquals(1, result.size());
-        assertEquals(3, result.get(0).getStatusId()); // default
+        assertEquals(1, result.getContent().size());
+        assertEquals(3, result.getContent().get(0).getStatusId());
     }
 
     @Test
@@ -122,8 +146,7 @@ class FormServiceTest {
         when(sentFormRepository.findByUserIdAndFormTemplateId(1L, 5))
                 .thenReturn(Optional.empty());
 
-        FormTemplateDTO result =
-                formService.getTemplate(5, authentication);
+        FormTemplateDTO result =  formService.getTemplate(5, 1L);
 
         assertNotNull(result);
         assertEquals(3, result.getStatusId());
@@ -140,7 +163,7 @@ class FormServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThrows(FormTemplateNotFoundException.class, () ->
-                formService.getTemplate(99, authentication)
+                formService.getTemplate(99, 1L)
         );
     }
 
@@ -190,7 +213,14 @@ class FormServiceTest {
         when(request.getFormTemplateId()).thenReturn(10);
         when(request.getFormData()).thenReturn(new ArrayList<>());
 
-        when(user.getId()).thenReturn(1L);
+        when(status.getId())
+                .thenReturn(SentFormStatusE.IN_NEED_OF_UPDATE.getId());
+
+        when(formToUpdate.getStatus())
+                .thenReturn(status);
+
+        when(user.getId())
+                .thenReturn(1L);
 
         when(sentFormStatusRepository.findById(1))
                 .thenReturn(Optional.of(status));
@@ -212,7 +242,11 @@ class FormServiceTest {
     @Test
     void testNotAuthenticated() {
         assertThrows(UnauthorizedException.class, () ->
-                formService.getFormTemplates(null)
+                formService.getFormTemplates(
+                        null,
+                        PageRequest.of(0, 10),
+                        null
+                )
         );
     }
 }

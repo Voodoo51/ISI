@@ -33,6 +33,11 @@ public class PaymentController {
         );
     }
 
+    @PutMapping("/payOffline/{paymentId}")
+    public ResponseEntity<PaymentDTO> payedOffline(@PathVariable Long paymentId) {
+        return ResponseEntity.ok(paymentService.payedOffline(paymentId));
+    }
+
     @PostMapping("/create")
     public ResponseEntity<PaymentDTO> createPayment(
             @RequestBody CreatePaymentRequest request){

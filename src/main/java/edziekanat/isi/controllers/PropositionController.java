@@ -92,8 +92,7 @@ public class PropositionController {
 
         Pageable pageable = PageRequest.of(
                 page,
-                size,
-                Sort.by(Sort.Direction.ASC, "createdAt")
+                size
         );
 
         return ResponseEntity.ok(propositionService.getAllPropositionMessages(propositionId, pageable));

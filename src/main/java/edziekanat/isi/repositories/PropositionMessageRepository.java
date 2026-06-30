@@ -12,4 +12,7 @@ public interface PropositionMessageRepository extends JpaRepository<PropositionM
     Page<PropositionMessage> findAllByPropositionIdOrderByCreatedAtDesc(
             Long propositionId,
             Pageable pageable
-    );}
+    );
+}
+
+

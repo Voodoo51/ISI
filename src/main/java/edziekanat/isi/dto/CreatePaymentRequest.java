@@ -1,8 +1,6 @@
 package edziekanat.isi.dto;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 
 public class CreatePaymentRequest {
 
@@ -12,6 +10,8 @@ public class CreatePaymentRequest {
     private String title;
     private String description;
     @NotNull(message = "paymentAmountEmptyError")
+    @Min(value = 1, message = "Amount must be at least 1")
+    @Max(value = 1000, message = "Amount must be at most 1000")
     private Long amount;
 
     public Long getUserId() {
