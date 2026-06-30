@@ -4,6 +4,7 @@ import edziekanat.isi.dto.ChangePasswordRequest;
 import edziekanat.isi.dto.RegisterRequest;
 import edziekanat.isi.dto.UserPublicData;
 import edziekanat.isi.exceptions.EmailAlreadyExistsException;
+import edziekanat.isi.exceptions.UserNotFoundException;
 import edziekanat.isi.exceptions.WrongCredentialsException;
 import edziekanat.isi.misc.LoginData;
 import edziekanat.isi.models.User;
@@ -11,6 +12,9 @@ import edziekanat.isi.models.UserRole;
 import edziekanat.isi.repositories.UserRepository;
 import edziekanat.isi.repositories.UserRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +47,18 @@ public class UserService {
         return new UserPublicData(user);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
+    public Page<UserPublicData> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable)
+                .map(UserPublicData::new);
+    }
+
+    public UserPublicData getUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(UserNotFoundException::new);
+
+        return new UserPublicData(user);
+    }
 
     public void changePassword(Long userId, ChangePasswordRequest dto){
         User user = userRepository.findById(userId).orElseThrow();
