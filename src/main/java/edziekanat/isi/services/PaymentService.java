@@ -64,7 +64,7 @@ public class PaymentService {
 
     public PaymentDTO createPayment(CreatePaymentRequest request) {
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new UserNotFoundException());
+                .orElseThrow(UserNotFoundException::new);
 
         PaymentStatus status = paymentStatusRepository.findById(0)
                 .orElseThrow(() -> new InternalServerErrorException("Status not found"));
@@ -81,9 +81,9 @@ public class PaymentService {
         return new PaymentDTO(payment);
     }
 
-    public PaymentDTO update(Long id, UpdatePaymentRequest request){
+    public PaymentDTO update(Long paymentId, UpdatePaymentRequest request){
 
-        Payment payment = paymentRepository.findById(id)
+        Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException("Payment not found"));
 
         PaymentStatus unpaidStatus = paymentStatusRepository.findById(0)
@@ -102,9 +102,9 @@ public class PaymentService {
         return new PaymentDTO(payment);
     }
 
-    public void delete(Long id){
+    public void delete(Long paymentId){
 
-        Payment payment = paymentRepository.findById(id)
+        Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException("Payment not found"));
 
         PaymentStatus paidStatus = paymentStatusRepository.findById(2)

@@ -5,6 +5,7 @@ import edziekanat.isi.models.Payment;
 import edziekanat.isi.services.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
@@ -39,18 +40,19 @@ public class PaymentController {
         return ResponseEntity.ok(paymentService.createPayment(request));
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/update/{paymentId}")
     public ResponseEntity<PaymentDTO> update(
-            @PathVariable Long id,
+            @PathVariable Long paymentId,
             @RequestBody UpdatePaymentRequest request){
 
-        return ResponseEntity.ok(paymentService.update(id, request));
+        return ResponseEntity.ok(paymentService.update(paymentId, request));
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id){
+    @DeleteMapping("/delete/{paymentId}")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long paymentId){
 
-        paymentService.delete(id);
+        paymentService.delete(paymentId);
 
         return ResponseEntity.noContent().build();
     }
