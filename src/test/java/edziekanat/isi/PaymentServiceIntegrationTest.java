@@ -3,6 +3,7 @@ package edziekanat.isi;
 import edziekanat.isi.dto.*;
 import edziekanat.isi.exceptions.PaymentAlreadyPaid;
 import edziekanat.isi.exceptions.PaymentNotFoundException;
+import edziekanat.isi.exceptions.UserNotFoundException;
 import edziekanat.isi.models.Payment;
 import edziekanat.isi.models.PaymentStatus;
 import edziekanat.isi.models.User;
@@ -273,6 +274,295 @@ class PaymentServiceIntegrationTest {
         assertEquals(
                 "initiated",
                 updated.getPaymentStatus().getName()
+        );
+    }
+
+    @Test
+    void shouldCreatePayment() {
+        UserRole role = userRoleRepository.findByName("student").orElseThrow();
+
+        User user = userRepository.save(
+                new User(role, "john", "", "john@test.com", "")
+        );
+
+        CreatePaymentRequest request = new CreatePaymentRequest();
+
+        request.setUserId(user.getId());
+        request.setTitle("Dormitory");
+        request.setDescription("Monthly payment");
+        request.setAmount(500L);
+
+        PaymentDTO dto = paymentService.createPayment(request);
+
+        assertNotNull(dto.getId());
+        assertEquals("Dormitory", dto.getTitle());
+        assertEquals(500L, dto.getAmount());
+
+        Payment payment =
+                paymentRepository.findById(dto.getId()).orElseThrow();
+
+        assertEquals("unpaid", payment.getPaymentStatus().getName());
+    }
+
+    @Test
+    void createPaymentShouldThrowWhenUserNotFound() {
+
+        CreatePaymentRequest request = new CreatePaymentRequest();
+
+        request.setUserId(99999L);
+
+        assertThrows(
+                UserNotFoundException.class,
+                () -> paymentService.createPayment(request)
+        );
+    }
+
+    @Test
+    void shouldUpdatePayment() {
+
+        UserRole role = userRoleRepository.findByName("student").orElseThrow();
+
+        User user =
+                userRepository.save(
+                        new User(role, "john", "", "john@test.com", "")
+                );
+
+        PaymentStatus unpaid =
+                paymentStatusRepository.findByName("unpaid").orElseThrow();
+
+        Payment payment = new Payment();
+
+        payment.setUser(user);
+        payment.setTitle("Old");
+        payment.setDescription("Old");
+        payment.setAmount(100L);
+        payment.setPaymentStatus(unpaid);
+
+        payment = paymentRepository.save(payment);
+
+        UpdatePaymentRequest request = new UpdatePaymentRequest();
+
+        request.setTitle("New");
+        request.setDescription("Updated");
+        request.setAmount(400L);
+
+        paymentService.update(payment.getId(), request);
+
+        Payment updated =
+                paymentRepository.findById(payment.getId()).orElseThrow();
+
+        assertEquals("New", updated.getTitle());
+        assertEquals("Updated", updated.getDescription());
+        assertEquals(400L, updated.getAmount());
+    }
+
+    @Test
+    void updateShouldThrowWhenPaymentAlreadyPaid() {
+
+        UserRole role = userRoleRepository.findByName("student").orElseThrow();
+
+        User user =
+                userRepository.save(
+                        new User(role, "john", "", "john@test.com", "")
+                );
+
+        PaymentStatus paid =
+                paymentStatusRepository.findByName("paid").orElseThrow();
+
+        Payment payment = new Payment();
+
+        payment.setUser(user);
+        payment.setPaymentStatus(paid);
+
+        payment = paymentRepository.save(payment);
+
+        UpdatePaymentRequest request = new UpdatePaymentRequest();
+
+        Payment finalPayment = payment;
+        assertThrows(
+                PaymentAlreadyPaid.class,
+                () -> paymentService.update(finalPayment.getId(), request)
+        );
+    }
+
+    @Test
+    void shouldDeletePayment() {
+
+        UserRole role = userRoleRepository.findByName("student").orElseThrow();
+
+        User user =
+                userRepository.save(
+                        new User(role, "john", "", "john@test.com", "")
+                );
+
+        PaymentStatus unpaid =
+                paymentStatusRepository.findByName("unpaid").orElseThrow();
+
+        Payment payment = new Payment();
+
+        payment.setUser(user);
+        payment.setPaymentStatus(unpaid);
+
+        payment = paymentRepository.save(payment);
+
+        paymentService.delete(payment.getId());
+
+        assertFalse(paymentRepository.findById(payment.getId()).isPresent());
+    }
+
+    @Test
+    void deleteShouldThrowWhenPaid() {
+
+        UserRole role = userRoleRepository.findByName("student").orElseThrow();
+
+        User user =
+                userRepository.save(
+                        new User(role, "john", "", "john@test.com", "")
+                );
+
+        PaymentStatus paid =
+                paymentStatusRepository.findByName("paid").orElseThrow();
+
+        Payment payment = new Payment();
+
+        payment.setUser(user);
+        payment.setPaymentStatus(paid);
+
+        payment = paymentRepository.save(payment);
+
+        Payment finalPayment = payment;
+        assertThrows(
+                PaymentAlreadyPaid.class,
+                () -> paymentService.delete(finalPayment.getId())
+        );
+    }
+
+    @Test
+    void shouldMarkPaymentAsPaidOffline() {
+
+        UserRole role = userRoleRepository.findByName("student").orElseThrow();
+
+        User user =
+                userRepository.save(
+                        new User(role, "john", "", "john@test.com", "")
+                );
+
+        PaymentStatus unpaid =
+                paymentStatusRepository.findByName("unpaid").orElseThrow();
+
+        Payment payment = new Payment();
+
+        payment.setUser(user);
+        payment.setPaymentStatus(unpaid);
+
+        payment = paymentRepository.save(payment);
+
+        paymentService.payedOffline(payment.getId());
+
+        Payment updated =
+                paymentRepository.findById(payment.getId()).orElseThrow();
+
+        assertEquals("paid", updated.getPaymentStatus().getName());
+    }
+
+    @Test
+    void payedOfflineShouldThrowWhenAlreadyPaid() {
+
+        UserRole role = userRoleRepository.findByName("student").orElseThrow();
+
+        User user =
+                userRepository.save(
+                        new User(role, "john", "", "john@test.com", "")
+                );
+
+        PaymentStatus paid =
+                paymentStatusRepository.findByName("paid").orElseThrow();
+
+        Payment payment = new Payment();
+
+        payment.setUser(user);
+        payment.setPaymentStatus(paid);
+
+        payment = paymentRepository.save(payment);
+
+        Payment finalPayment = payment;
+        assertThrows(
+                PaymentAlreadyPaid.class,
+                () -> paymentService.payedOffline(finalPayment.getId())
+        );
+    }
+
+    @Test
+    void finalizePaymentShouldMarkAsFailed() {
+
+        UserRole role = userRoleRepository.findByName("student").orElseThrow();
+
+        User user =
+                userRepository.save(
+                        new User(role, "john", "", "john@test.com", "")
+                );
+
+        PaymentStatus pending =
+                paymentStatusRepository.findByName("pending").orElseThrow();
+
+        Payment payment = new Payment();
+
+        payment.setUser(user);
+        payment.setOrderId("FAILED123");
+        payment.setPaymentStatus(pending);
+
+        payment = paymentRepository.save(payment);
+
+        PayUNotification notification = new PayUNotification();
+
+        PayUNotification.Order order = new PayUNotification.Order();
+
+        order.setOrderId("FAILED123");
+        order.setStatus("FAILED");
+
+        notification.setOrder(order);
+
+        paymentService.finalizePayment(notification);
+
+        Payment updated =
+                paymentRepository.findById(payment.getId()).orElseThrow();
+
+        assertEquals("failed", updated.getPaymentStatus().getName());
+    }
+
+    @Test
+    void finalizePaymentShouldThrowForUnknownStatus() {
+
+        UserRole role = userRoleRepository.findByName("student").orElseThrow();
+
+        User user =
+                userRepository.save(
+                        new User(role, "john", "", "john@test.com", "")
+                );
+
+        PaymentStatus pending =
+                paymentStatusRepository.findByName("pending").orElseThrow();
+
+        Payment payment = new Payment();
+
+        payment.setUser(user);
+        payment.setOrderId("ORDERXYZ");
+        payment.setPaymentStatus(pending);
+
+        paymentRepository.save(payment);
+
+        PayUNotification notification = new PayUNotification();
+
+        PayUNotification.Order order = new PayUNotification.Order();
+
+        order.setOrderId("ORDERXYZ");
+        order.setStatus("UNKNOWN");
+
+        notification.setOrder(order);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> paymentService.finalizePayment(notification)
         );
     }
 

@@ -1,9 +1,10 @@
 package edziekanat.isi;
 
 import edziekanat.isi.dto.*;
-import edziekanat.isi.exceptions.FormTemplateNotFoundException;
-import edziekanat.isi.exceptions.UnauthorizedException;
+import edziekanat.isi.exceptions.*;
 import edziekanat.isi.misc.CustomUserDetails;
+import edziekanat.isi.misc.FormField;
+import edziekanat.isi.misc.FormFilledField;
 import edziekanat.isi.misc.SentFormStatusE;
 import edziekanat.isi.models.*;
 import edziekanat.isi.repositories.FormTemplateRepository;
@@ -237,6 +238,482 @@ class FormServiceTest {
         formService.sendForm(request, authentication);
 
         verify(sentFormRepository).save(any(SentForm.class));
+    }
+
+    @Test
+    void createFormTemplateShouldThrowWhenFileCannotBeRead() throws IOException {
+
+        FormTemplateCreationRequest request = mock(FormTemplateCreationRequest.class);
+        MultipartFile file = mock(MultipartFile.class);
+
+        when(request.getTitle()).thenReturn("Test");
+        when(request.getFormFields()).thenReturn(new ArrayList<>());
+
+        when(file.getBytes()).thenThrow(IOException.class);
+
+        assertThrows(
+                FileErrorException.class,
+                () -> formService.createFormTemplate(request, file)
+        );
+    }
+
+    @Test
+    void shouldReturnTemplateWithExistingSubmission() {
+
+        FormTemplate template = new FormTemplate();
+        template.setId(5);
+
+        SentFormStatus status = new SentFormStatus(2, "accepted");
+
+        SentForm sentForm = new SentForm();
+        sentForm.setStatus(status);
+        sentForm.setResponse("Approved");
+
+        when(formTemplateRepository.findById(5))
+                .thenReturn(Optional.of(template));
+
+        when(sentFormRepository.findByUserIdAndFormTemplateId(1L, 5))
+                .thenReturn(Optional.of(sentForm));
+
+        FormTemplateDTO dto = formService.getTemplate(5, 1L);
+
+        assertEquals(2, dto.getStatusId());
+        assertEquals("Approved", dto.getResponse());
+    }
+
+    @Test
+    void sendFormShouldThrowWhenStatusMissing() {
+
+        mockAuth(1L);
+
+        SendFormRequest request = mock(SendFormRequest.class);
+
+        when(sentFormStatusRepository.findById(1))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                InternalServerErrorException.class,
+                () -> formService.sendForm(request, authentication)
+        );
+    }
+
+    @Test
+    void sendFormShouldThrowWhenUserMissing() {
+
+        mockAuth(1L);
+
+        SendFormRequest request = mock(SendFormRequest.class);
+
+        SentFormStatus status = mock(SentFormStatus.class);
+
+        when(sentFormStatusRepository.findById(1))
+                .thenReturn(Optional.of(status));
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                UserNotFoundException.class,
+                () -> formService.sendForm(request, authentication)
+        );
+    }
+
+    @Test
+    void sendFormShouldThrowWhenTemplateMissing() {
+
+        mockAuth(1L);
+
+        SendFormRequest request = mock(SendFormRequest.class);
+
+        when(request.getFormTemplateId()).thenReturn(7);
+
+        User user = mock(User.class);
+        SentFormStatus status = mock(SentFormStatus.class);
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+
+        when(sentFormStatusRepository.findById(1))
+                .thenReturn(Optional.of(status));
+
+        when(formTemplateRepository.findById(7))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                InternalServerErrorException.class,
+                () -> formService.sendForm(request, authentication)
+        );
+    }
+
+    @Test
+    void shouldNotAllowSendingSameFormTwice() {
+
+        mockAuth(1L);
+
+        SendFormRequest request = mock(SendFormRequest.class);
+
+        when(request.getFormTemplateId()).thenReturn(5);
+        when(request.getFormData()).thenReturn(new ArrayList<>());
+
+        User user = mock(User.class);
+        when(user.getId()).thenReturn(1L);
+
+        FormTemplate template = mock(FormTemplate.class);
+
+        SentFormStatus pending = mock(SentFormStatus.class);
+        when(pending.getId()).thenReturn(1);
+
+        SentForm sent = mock(SentForm.class);
+        when(sent.getStatus()).thenReturn(pending);
+
+        when(sentFormStatusRepository.findById(1))
+                .thenReturn(Optional.of(pending));
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+
+        when(formTemplateRepository.findById(5))
+                .thenReturn(Optional.of(template));
+
+        when(sentFormRepository.findByUserIdAndFormTemplateId(1L, 5))
+                .thenReturn(Optional.of(sent));
+
+        assertThrows(
+                UnauthorizedException.class,
+                () -> formService.sendForm(request, authentication)
+        );
+    }
+
+    @Test
+    void sendFormShouldRejectInvalidPhoneNumber() {
+        mockAuth(1L);
+
+        FormField field = new FormField();
+        field.setId(1);
+        field.setLabel("Phone");
+        field.setType("phoneNumber");
+
+        FormTemplate template = new FormTemplate();
+        template.setFormFields(List.of(field));
+
+        FormFilledField filled = new FormFilledField();
+        filled.setId(1);
+        filled.setValue("abc123");
+
+        SendFormRequest request = mock(SendFormRequest.class);
+
+        when(request.getFormTemplateId()).thenReturn(1);
+        when(request.getFormData()).thenReturn(List.of(filled));
+
+        User user = mock(User.class);
+        when(user.getId()).thenReturn(1L);
+
+        SentFormStatus status = new SentFormStatus(1, "pending");
+
+        when(sentFormStatusRepository.findById(1)).thenReturn(Optional.of(status));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(formTemplateRepository.findById(1)).thenReturn(Optional.of(template));
+
+        assertThrows(BadRequestException.class,
+                () -> formService.sendForm(request, authentication));
+    }
+
+    @Test
+    void sendFormShouldRejectInvalidPesel() {
+        mockAuth(1L);
+
+        FormField field = new FormField();
+        field.setId(1);
+        field.setLabel("PESEL");
+        field.setType("pesel");
+
+        FormTemplate template = new FormTemplate();
+        template.setFormFields(List.of(field));
+
+        FormFilledField filled = new FormFilledField();
+        filled.setId(1);
+        filled.setValue("12345");
+
+        SendFormRequest request = mock(SendFormRequest.class);
+
+        when(request.getFormTemplateId()).thenReturn(1);
+        when(request.getFormData()).thenReturn(List.of(filled));
+
+        User user = mock(User.class);
+        when(user.getId()).thenReturn(1L);
+
+        SentFormStatus status = new SentFormStatus(1, "pending");
+
+        when(sentFormStatusRepository.findById(1)).thenReturn(Optional.of(status));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(formTemplateRepository.findById(1)).thenReturn(Optional.of(template));
+
+        assertThrows(BadRequestException.class,
+                () -> formService.sendForm(request, authentication));
+    }
+
+    @Test
+    void sendFormShouldRejectWhenFieldIsMissing() {
+        mockAuth(1L);
+
+        FormField field1 = new FormField();
+        field1.setId(1);
+        field1.setLabel("First");
+        field1.setType("text");
+
+        FormField field2 = new FormField();
+        field2.setId(2);
+        field2.setLabel("Second");
+        field2.setType("text");
+
+        FormTemplate template = new FormTemplate();
+        template.setFormFields(List.of(field1, field2));
+
+        FormFilledField filled = new FormFilledField();
+        filled.setId(1);
+        filled.setValue("value");
+
+        SendFormRequest request = mock(SendFormRequest.class);
+
+        when(request.getFormTemplateId()).thenReturn(1);
+        when(request.getFormData()).thenReturn(List.of(filled));
+
+        User user = mock(User.class);
+        when(user.getId()).thenReturn(1L);
+
+        SentFormStatus status = new SentFormStatus(1, "pending");
+
+        when(sentFormStatusRepository.findById(1)).thenReturn(Optional.of(status));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(formTemplateRepository.findById(1)).thenReturn(Optional.of(template));
+
+        assertThrows(BadRequestException.class,
+                () -> formService.sendForm(request, authentication));
+    }
+
+    @Test
+    void shouldReturnEmptySentFormsList() {
+
+        when(sentFormRepository.findByUserId(1L))
+                .thenReturn(List.of());
+
+        List<SentFormDTO> result = formService.getSentForms(1L);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void shouldUpdateSentFormStatus() {
+
+        mockAuth(1L);
+
+        UpdateSentFormRequest request = new UpdateSentFormRequest();
+
+        request.setSentFormId(1L);
+        request.setNewStatusId(2);
+        request.setResponse("Accepted");
+
+        SentForm form = new SentForm();
+        SentFormStatus status = new SentFormStatus(2, "accepted");
+
+        when(sentFormRepository.findById(1L))
+                .thenReturn(Optional.of(form));
+
+        when(sentFormStatusRepository.findById(2))
+                .thenReturn(Optional.of(status));
+
+        formService.updateSentFormStatus(request, authentication);
+
+        verify(sentFormRepository).save(form);
+
+        assertEquals("Accepted", form.getResponse());
+        assertEquals(status, form.getStatus());
+    }
+
+    @Test
+    void updateSentFormStatusShouldThrowWhenFormMissing() {
+
+        mockAuth(1L);
+
+        UpdateSentFormRequest request = new UpdateSentFormRequest();
+
+        request.setSentFormId(100L);
+
+        when(sentFormRepository.findById(100L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                SentFormNotFoundException.class,
+                () -> formService.updateSentFormStatus(request, authentication)
+        );
+    }
+
+    @Test
+    void shouldReturnTemplatePdf() {
+
+        FormTemplate template = new FormTemplate();
+        template.setId(5);
+        template.setForm_pdf(new byte[]{1,2,3});
+
+        when(formTemplateRepository.findById(5))
+                .thenReturn(Optional.of(template));
+
+        FormTemplateFileDTO dto =
+                formService.getTemplatePdf(5);
+
+        assertArrayEquals(new byte[]{1,2,3}, dto.getPdfFile());
+    }
+
+    @Test
+    void shouldThrowWhenTemplatePdfNotFound() {
+
+        when(formTemplateRepository.findById(5))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                FormTemplateNotFoundException.class,
+                () -> formService.getTemplatePdf(5)
+        );
+    }
+
+    @Test
+    void sendFormShouldRejectInvalidEmail() {
+        mockAuth(1L);
+
+        FormField field = new FormField();
+        field.setId(1);
+        field.setLabel("Email");
+        field.setType("email");
+
+        FormTemplate template = new FormTemplate();
+        template.setFormFields(List.of(field));
+
+        FormFilledField filled = new FormFilledField();
+        filled.setId(1);
+        filled.setValue("not-an-email");
+
+        SendFormRequest request = mock(SendFormRequest.class);
+
+        when(request.getFormTemplateId()).thenReturn(1);
+        when(request.getFormData()).thenReturn(List.of(filled));
+
+        User user = mock(User.class);
+        when(user.getId()).thenReturn(1L);
+
+        SentFormStatus status = new SentFormStatus(1, "pending");
+
+        when(sentFormStatusRepository.findById(1)).thenReturn(Optional.of(status));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(formTemplateRepository.findById(1)).thenReturn(Optional.of(template));
+
+        assertThrows(BadRequestException.class,
+                () -> formService.sendForm(request, authentication));
+    }
+
+    @Test
+    void searchSentFormsShouldUseAdminRepositoryMethod() {
+
+        Authentication auth = mock(Authentication.class);
+
+        when(auth.getName()).thenReturn("admin@test.com");
+
+        UserRole role = new UserRole();
+        role.setName("admin");
+
+        User user = new User();
+        user.setRole(role);
+
+        when(userRepository.findByEmail("admin@test.com"))
+                .thenReturn(Optional.of(user));
+
+        when(sentFormRepository.search(any(), any(), any()))
+                .thenReturn(Page.empty());
+
+        formService.searchSentForms(
+                "test",
+                null,
+                PageRequest.of(0, 10),
+                auth
+        );
+
+        verify(sentFormRepository).search(
+                eq("test"),
+                isNull(),
+                any(Pageable.class)
+        );
+
+        verify(sentFormRepository, never())
+                .searchUserForms(anyLong(), any(), any(), any());
+    }
+
+    @Test
+    void searchSentFormsShouldUseAdminSearch() {
+
+        Authentication auth = mock(Authentication.class);
+
+        when(auth.getName()).thenReturn("admin@test.com");
+
+        UserRole role = new UserRole();
+        role.setName("admin");
+
+        User user = new User();
+        user.setRole(role);
+
+        when(userRepository.findByEmail("admin@test.com"))
+                .thenReturn(Optional.of(user));
+
+        when(sentFormRepository.search(any(), any(), any()))
+                .thenReturn(Page.empty());
+
+        formService.searchSentForms(
+                "abc",
+                null,
+                PageRequest.of(0,10),
+                auth
+        );
+
+        verify(sentFormRepository).search(any(), any(), any());
+        verify(sentFormRepository, never())
+                .searchUserForms(any(), any(), any(), any());
+    }
+
+    @Test
+    void searchSentFormsShouldUseStudentSearch() {
+
+        Authentication auth = mock(Authentication.class);
+
+        when(auth.getName()).thenReturn("student@test.com");
+
+        UserRole role = new UserRole();
+        role.setName("student");
+
+        User user = new User();
+        user.setId(5L);
+        user.setRole(role);
+
+        when(userRepository.findByEmail("student@test.com"))
+                .thenReturn(Optional.of(user));
+
+        when(sentFormRepository.searchUserForms(any(), any(), any(), any()))
+                .thenReturn(Page.empty());
+
+        formService.searchSentForms(
+                "abc",
+                null,
+                PageRequest.of(0,10),
+                auth
+        );
+
+        verify(sentFormRepository).searchUserForms(
+                eq(5L),
+                any(),
+                any(),
+                any()
+        );
+
+        verify(sentFormRepository, never())
+                .search(any(), any(), any());
     }
 
     @Test
